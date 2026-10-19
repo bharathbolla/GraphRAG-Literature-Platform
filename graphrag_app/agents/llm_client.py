@@ -1,7 +1,6 @@
 """
 Gemini Flash LLM Client for Dynamic Autonomous Clinical Agents.
-Provides generative multi-study clinical synthesis, schema-constrained PICO extraction,
-and intent classification using Google Gemini Flash.
+Powered by Google Gemini 3.8 Flash via the modern `google.genai` SDK.
 """
 
 import os
@@ -14,34 +13,33 @@ logger = logging.getLogger("graphrag.gemini")
 
 class GeminiClient:
     """
-    Manages communication with Google Gemini Flash.
-    Supports dynamic fallback across candidate model names (e.g. gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-flash)
-    and graceful degradation when API keys are unconfigured.
+    Manages communication with Google Gemini 3.8 Flash using the official google.genai SDK.
+    Supports dynamic fallback across candidate model names and graceful degradation
+    when API keys are unconfigured.
     """
     def __init__(self):
         self.api_key = settings.GEMINI_API_KEY
         self.configured = False
-        self._genai = None
+        self._client = None
         self._init_client()
 
     def _init_client(self):
-        """Initializes the Google Generative AI client if API key is present."""
+        """Initializes the modern Google GenAI client."""
         if not self.api_key:
             logger.info("GeminiClient: GEMINI_API_KEY not configured. Operating in dynamic hybrid mode.")
             return
 
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            self._genai = genai
+            from google import genai
+            self._client = genai.Client(api_key=self.api_key)
             self.configured = True
-            logger.info(f"GeminiClient: Successfully initialized with model target '{settings.GEMINI_MODEL}'.")
+            logger.info(f"GeminiClient: Successfully initialized with target model '{settings.GEMINI_MODEL}'.")
         except Exception as e:
             logger.warning(f"GeminiClient initialization error: {e}")
             self.configured = False
 
     def is_available(self) -> bool:
-        return self.configured and self._genai is not None
+        return self.configured and self._client is not None
 
     def get_model_chain(self) -> List[str]:
         """Returns prioritized candidate model chain starting with user-specified model."""
@@ -62,11 +60,13 @@ class GeminiClient:
         system_prompt: str
     ) -> Optional[str]:
         """
-        Dynamically synthesizes multi-document clinical trial evidence using Gemini Flash.
+        Dynamically synthesizes multi-document clinical trial evidence using Gemini 3.8 Flash.
         Strictly grounds claims in provided evidence rows and citations.
         """
         if not self.is_available():
             return None
+
+        from google.genai import types
 
         # Format evidence context
         evidence_context = []
@@ -113,11 +113,14 @@ INSTRUCTIONS FOR SYNTHESIS:
 
         for model_name in self.get_model_chain():
             try:
-                model = self._genai.GenerativeModel(
-                    model_name=model_name,
-                    generation_config={"temperature": 0.1, "max_output_tokens": 1500}
+                response = self._client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.1,
+                        max_output_tokens=1500
+                    )
                 )
-                response = model.generate_content(prompt)
                 if response and response.text:
                     logger.info(f"GeminiClient: Clinical synthesis successfully generated via {model_name}.")
                     return response.text.strip()
@@ -132,10 +135,12 @@ INSTRUCTIONS FOR SYNTHESIS:
         matched_articles: List[Any]
     ) -> Optional[List[Dict[str, str]]]:
         """
-        Dynamically formulates 3 distinct, high-impact clinical prompt variations using Gemini Flash.
+        Dynamically formulates 3 distinct, high-impact clinical prompt variations using Gemini 3.8 Flash.
         """
         if not self.is_available():
             return None
+
+        from google.genai import types
 
         studies = [f"{a.title} (PMID:{a.pmid})" for a in matched_articles[:5]]
         studies_context = "; ".join(studies)
@@ -167,11 +172,14 @@ Return ONLY valid JSON matching this exact array format:
 """
         for model_name in self.get_model_chain():
             try:
-                model = self._genai.GenerativeModel(
-                    model_name=model_name,
-                    generation_config={"temperature": 0.2, "response_mime_type": "application/json"}
+                response = self._client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.2,
+                        response_mime_type="application/json"
+                    )
                 )
-                response = model.generate_content(prompt)
                 if response and response.text:
                     clean_text = response.text.strip()
                     if clean_text.startswith("```json"):
@@ -195,10 +203,12 @@ Return ONLY valid JSON matching this exact array format:
     ) -> Optional[Dict[str, Any]]:
         """
         Extracts structured PICO (Population, Intervention, Comparator, Outcomes)
-        from a raw clinical trial title and abstract using Gemini Flash.
+        from a raw clinical trial title and abstract using Gemini 3.8 Flash.
         """
         if not self.is_available():
             return None
+
+        from google.genai import types
 
         prompt = f"""
 You are a Clinical Data Extraction Guard for systematic literature reviews.
@@ -242,11 +252,14 @@ Return ONLY valid JSON adhering strictly to this schema:
 """
         for model_name in self.get_model_chain():
             try:
-                model = self._genai.GenerativeModel(
-                    model_name=model_name,
-                    generation_config={"temperature": 0.0, "response_mime_type": "application/json"}
+                response = self._client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.0,
+                        response_mime_type="application/json"
+                    )
                 )
-                response = model.generate_content(prompt)
                 if response and response.text:
                     clean_text = response.text.strip()
                     if clean_text.startswith("```json"):

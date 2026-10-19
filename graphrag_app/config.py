@@ -32,12 +32,12 @@ class Settings(BaseModel):
     
     # Gemini Flash Dynamic Agent Settings
     GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
-    GEMINI_MODEL: str = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    GEMINI_MODEL: str = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
     GEMINI_FALLBACK_MODELS: List[str] = [
+        "gemini-3.8-flash",
         "gemini-2.5-flash",
         "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-flash"
+        "gemini-1.5-flash"
     ]
     USE_DYNAMIC_AGENTS: bool = True
     
