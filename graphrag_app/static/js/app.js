@@ -23,13 +23,13 @@ let activeFilters = {
 // ==================== TAB NAVIGATION ====================
 function switchTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-    btn.classList.add('text-slate-400');
+    btn.classList.remove('tab-active-novartis', 'bg-blue-600', 'text-white', 'shadow-sm');
+    btn.classList.add('text-[#94A0B4]');
   });
   const activeBtn = document.getElementById(`tab-btn-${tabName}`);
   if (activeBtn) {
-    activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
-    activeBtn.classList.remove('text-slate-400');
+    activeBtn.classList.add('tab-active-novartis');
+    activeBtn.classList.remove('text-[#94A0B4]');
   }
 
   ['corpus', 'chat', 'ner', 'pico', 'graph'].forEach(view => {
@@ -108,28 +108,28 @@ function renderArticlesList() {
     const primaryOut = art.pico?.outcomes?.[0] || {};
 
     const card = document.createElement('div');
-    card.className = "bg-slate-900 border border-slate-800 p-5 rounded-2xl hover:border-slate-700 transition space-y-3 shadow-sm";
+    card.className = "novartis-card p-5 rounded-2xl hover:border-[#EC9A1E]/50 transition-all duration-200 space-y-3 shadow-md";
     card.innerHTML = `
       <div class="flex items-start justify-between gap-3">
         <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">${art.study_design}</span>
-          <span class="text-xs text-slate-500 ml-2 font-mono">${art.journal} (${art.year})</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#EC9A1E]/15 text-[#EC9A1E] border border-[#EC9A1E]/30">${art.study_design}</span>
+          <span class="text-xs text-[#94A0B4] ml-2 font-mono">${art.journal} (${art.year})</span>
           <h3 class="text-sm font-bold text-white mt-1.5 leading-snug">${art.title}</h3>
         </div>
-        <a href="https://pubmed.ncbi.nlm.nih.gov/${pmid}/" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 font-mono px-2 py-1 rounded bg-slate-800 border border-slate-700 whitespace-nowrap">
+        <a href="https://pubmed.ncbi.nlm.nih.gov/${pmid}/" target="_blank" class="text-xs text-[#EC9A1E] hover:text-[#f5a623] font-mono px-2 py-1 rounded bg-[#151922] border border-[#2B3342] whitespace-nowrap">
           PMID:${pmid}
         </a>
       </div>
 
-      <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">${art.abstract}</p>
+      <p class="text-xs text-[#94A0B4] line-clamp-3 leading-relaxed">${art.abstract}</p>
 
-      <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="pt-2 border-t border-[#2B3342] flex flex-wrap items-center justify-between gap-2 text-xs">
         <div class="flex flex-wrap items-center gap-3">
-          <span class="text-slate-400">Cohort N: <strong class="text-white font-mono">${pop.n ? pop.n.toLocaleString() : 'N/A'}</strong></span>
-          <span class="text-slate-400">Drug: <strong class="text-emerald-400">${inter.name || 'N/A'}</strong></span>
-          <span class="text-slate-400">Primary: <strong class="text-cyan-400">${primaryOut.measure || 'HR'} ${primaryOut.effect || ''}</strong></span>
+          <span class="text-[#94A0B4]">Cohort N: <strong class="text-white font-mono">${pop.n ? pop.n.toLocaleString() : 'N/A'}</strong></span>
+          <span class="text-[#94A0B4]">Drug: <strong class="text-[#EC9A1E]">${inter.name || 'N/A'}</strong></span>
+          <span class="text-[#94A0B4]">Primary: <strong class="text-[#E74A21]">${primaryOut.measure || 'HR'} ${primaryOut.effect || ''}</strong></span>
         </div>
-        <button onclick="openQuoteModal('${escapeQuotes(art.title)}', '${art.journal} ${art.year}', '${escapeQuotes(primaryOut.evidence || '')}', '${pmid}')" class="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 transition">
+        <button onclick="openQuoteModal('${escapeQuotes(art.title)}', '${art.journal} ${art.year}', '${escapeQuotes(primaryOut.evidence || '')}', '${pmid}')" class="text-xs text-[#EC9A1E] hover:text-[#f5a623] font-semibold flex items-center gap-1 transition">
           <i class="fa-solid fa-quote-left text-[10px]"></i> View Proof
         </button>
       </div>
@@ -207,29 +207,29 @@ function renderIngestionSuggestions(suggestions) {
 
   suggestions.forEach((s, idx) => {
     const card = document.createElement('div');
-    card.className = "bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 hover:border-amber-500/50 hover:bg-slate-900/90 transition shadow-sm cursor-pointer group";
+    card.className = "novartis-card rounded-xl p-4 flex flex-col justify-between space-y-3 hover:border-[#EC9A1E]/60 hover:bg-[#232A38] transition shadow-md cursor-pointer group border-l-4 border-l-[#EC9A1E]";
     card.title = "Click to load this query into the search bar";
     card.onclick = (e) => {
       if (e.target.closest('button')) return;
       applySuggestedQueryByIndex(idx, false);
     };
 
-    let badgeColor = "bg-amber-500/10 text-amber-300 border-amber-500/20";
+    let badgeColor = "bg-[#EC9A1E]/15 text-[#EC9A1E] border-[#EC9A1E]/30";
     let icon = "fa-magnifying-glass-plus";
     const labelLower = (s.strategy_label || "").toLowerCase();
     if (labelLower.includes("head-to-head") || labelLower.includes("comparator") || labelLower.includes("superiority")) {
-      badgeColor = "bg-cyan-500/10 text-cyan-300 border-cyan-500/20";
+      badgeColor = "bg-[#E74A21]/15 text-[#E74A21] border-[#E74A21]/30";
       icon = "fa-code-compare";
     } else if (labelLower.includes("endpoint") || labelLower.includes("survival") || labelLower.includes("progression")) {
-      badgeColor = "bg-purple-500/10 text-purple-300 border-purple-500/20";
+      badgeColor = "bg-[#F7B516]/15 text-[#F7B516] border-[#F7B516]/30";
       icon = "fa-chart-line";
     } else if (labelLower.includes("landscape") || labelLower.includes("class") || labelLower.includes("biologic") || labelLower.includes("depletion")) {
-      badgeColor = "bg-emerald-500/10 text-emerald-300 border-emerald-500/20";
+      badgeColor = "bg-[#0460A9]/15 text-[#4ea8ff] border-[#0460A9]/30";
       icon = "fa-diagram-project";
     }
 
     const drugsHtml = (s.target_drugs || []).map(d =>
-      `<span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 font-mono">${d}</span>`
+      `<span class="text-[10px] bg-[#151922] text-[#E2E6EC] px-2 py-0.5 rounded border border-[#2B3342] font-mono">${d}</span>`
     ).join(' ');
 
     card.innerHTML = `
@@ -239,41 +239,41 @@ function renderIngestionSuggestions(suggestions) {
             <i class="fa-solid ${icon} text-[10px]"></i>
             <span>${s.strategy_label}</span>
           </span>
-          <span class="text-[11px] font-bold font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap">
+          <span class="text-[11px] font-bold font-mono text-[#EC9A1E] bg-[#EC9A1E]/10 px-2 py-0.5 rounded border border-[#EC9A1E]/20 whitespace-nowrap">
             ${s.expected_yield}
           </span>
         </div>
 
-        <p class="text-xs text-slate-300 leading-relaxed font-medium">
+        <p class="text-xs text-[#E2E6EC] leading-relaxed font-medium">
           ${s.rationale}
         </p>
 
         ${s.target_drugs && s.target_drugs.length > 0 ? `
           <div class="pt-1 flex flex-wrap gap-1 items-center">
-            <span class="text-[10px] text-slate-400 uppercase font-semibold">Key Compounds:</span>
+            <span class="text-[10px] text-[#94A0B4] uppercase font-semibold">Key Compounds:</span>
             ${drugsHtml}
           </div>
         ` : ''}
 
-        <div class="bg-slate-900/90 rounded-lg p-2.5 border border-slate-800">
-          <div class="text-[10px] text-slate-400 font-semibold mb-1 flex items-center justify-between">
-            <span class="text-slate-400 font-mono">Optimized PubMed Syntax:</span>
-            <button type="button" onclick="copySuggestedQueryByIndex(${idx}, this); event.stopPropagation();" class="text-blue-400 hover:text-blue-300 text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800 transition">
+        <div class="bg-[#151922] rounded-lg p-2.5 border border-[#2B3342]">
+          <div class="text-[10px] text-[#94A0B4] font-semibold mb-1 flex items-center justify-between">
+            <span class="text-[#94A0B4] font-mono">Optimized PubMed Syntax:</span>
+            <button type="button" onclick="copySuggestedQueryByIndex(${idx}, this); event.stopPropagation();" class="text-[#EC9A1E] hover:text-[#f5a623] text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-[#2B3342] transition">
               <i class="fa-regular fa-copy"></i> Copy
             </button>
           </div>
-          <div class="font-mono text-[11px] text-cyan-200 break-all leading-normal">
+          <div class="font-mono text-[11px] text-[#F7B516] break-all leading-normal">
             ${s.optimized_query}
           </div>
         </div>
       </div>
 
-      <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-800/80">
-        <button type="button" onclick="applySuggestedQueryByIndex(${idx}, false); event.stopPropagation();" class="text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition border border-slate-700 flex items-center gap-1.5 font-medium shadow-sm">
-          <i class="fa-solid fa-pen-to-square text-[11px] text-amber-400"></i>
+      <div class="pt-2 flex items-center justify-between gap-2 border-t border-[#2B3342]">
+        <button type="button" onclick="applySuggestedQueryByIndex(${idx}, false); event.stopPropagation();" class="text-xs text-[#E2E6EC] hover:text-white px-3 py-1.5 rounded-lg bg-[#232A38] hover:bg-[#2B3342] transition border border-[#2B3342] flex items-center gap-1.5 font-medium shadow-sm">
+          <i class="fa-solid fa-pen-to-square text-[11px] text-[#EC9A1E]"></i>
           <span>Use Query</span>
         </button>
-        <button type="button" onclick="applySuggestedQueryByIndex(${idx}, true); event.stopPropagation();" class="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 px-3.5 py-1.5 rounded-lg transition shadow-md shadow-blue-600/30 flex items-center gap-1.5 whitespace-nowrap">
+        <button type="button" onclick="applySuggestedQueryByIndex(${idx}, true); event.stopPropagation();" class="btn-saffron text-xs font-bold px-3.5 py-1.5 rounded-lg transition shadow-md flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-cloud-arrow-down text-[11px]"></i>
           <span>⚡ Ingest this Search</span>
         </button>
@@ -487,21 +487,21 @@ async function sendChatMessage() {
         document.getElementById('chat-refined-prompts-section')?.classList.remove('hidden');
         refPrompts.forEach(p => {
           const card = document.createElement('div');
-          card.className = "bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl space-y-2 hover:border-cyan-500/50 hover:bg-slate-900/90 transition cursor-pointer group shadow-sm flex flex-col justify-between";
+          card.className = "novartis-card p-3.5 rounded-xl space-y-2 hover:border-[#EC9A1E]/60 hover:bg-[#232A38] transition cursor-pointer group shadow-sm flex flex-col justify-between border-l-2 border-l-[#EC9A1E]";
           card.onclick = () => fillAndSubmitChat(p.prompt);
 
-          let badgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/20";
-          if (p.category.includes("Safety")) badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
-          if (p.category.includes("Guideline")) badgeColor = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+          let badgeColor = "bg-[#EC9A1E]/15 text-[#EC9A1E] border-[#EC9A1E]/30";
+          if (p.category.includes("Safety")) badgeColor = "bg-[#E74A21]/15 text-[#E74A21] border-[#E74A21]/30";
+          if (p.category.includes("Guideline")) badgeColor = "bg-[#F7B516]/15 text-[#F7B516] border-[#F7B516]/30";
 
           card.innerHTML = `
             <div class="space-y-1.5">
               <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${badgeColor}">${p.category}</span>
-              <p class="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition leading-snug">"${p.prompt}"</p>
+              <p class="text-xs font-semibold text-white group-hover:text-[#EC9A1E] transition leading-snug">"${p.prompt}"</p>
             </div>
-            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+            <div class="pt-2 border-t border-[#2B3342] flex items-center justify-between text-[11px] text-[#94A0B4]">
               <span class="line-clamp-1">${p.rationale}</span>
-              <span class="text-cyan-400 group-hover:translate-x-0.5 transition flex items-center gap-1 font-semibold whitespace-nowrap ml-1">
+              <span class="text-[#EC9A1E] group-hover:translate-x-0.5 transition flex items-center gap-1 font-semibold whitespace-nowrap ml-1">
                 Explore <i class="fa-solid fa-arrow-right text-[10px]"></i>
               </span>
             </div>
@@ -529,14 +529,14 @@ async function sendChatMessage() {
 
 function switchChatSubTab(subTabName) {
   document.querySelectorAll('.chat-subtab').forEach(btn => {
-    btn.classList.remove('bg-blue-600', 'text-white', 'active');
-    btn.classList.add('text-slate-400');
+    btn.classList.remove('tab-active-novartis', 'bg-blue-600', 'text-white', 'active');
+    btn.classList.add('text-[#94A0B4]');
   });
 
   const activeBtn = document.getElementById(`subtab-btn-${subTabName}`);
   if (activeBtn) {
-    activeBtn.classList.add('bg-blue-600', 'text-white', 'active');
-    activeBtn.classList.remove('text-slate-400');
+    activeBtn.classList.add('tab-active-novartis', 'active');
+    activeBtn.classList.remove('text-[#94A0B4]');
   }
 
   ['synthesis', 'evidence', 'citations'].forEach(view => {
@@ -586,11 +586,11 @@ async function loadNERList() {
 function filterNER(type) {
   currentNERFilter = type;
   document.querySelectorAll('.ner-filter-btn').forEach(btn => {
-    btn.classList.remove('bg-blue-600', 'text-white');
-    btn.classList.add('bg-slate-800', 'text-slate-300');
+    btn.classList.remove('tab-active-novartis', 'bg-blue-600', 'text-white');
+    btn.classList.add('bg-[#232A38]', 'text-[#94A0B4]');
     if (btn.innerText.startsWith(type) || (type === 'All' && btn.innerText.startsWith('All'))) {
-      btn.classList.add('bg-blue-600', 'text-white');
-      btn.classList.remove('bg-slate-800', 'text-slate-300');
+      btn.classList.add('tab-active-novartis');
+      btn.classList.remove('bg-[#232A38]', 'text-[#94A0B4]');
     }
   });
 
@@ -620,14 +620,14 @@ function renderNERFiltered() {
     const item = document.createElement('div');
     const isSelected = activeNEREntity === e.name;
     item.className = `p-3 rounded-xl border cursor-pointer flex items-center justify-between transition ${
-      isSelected ? 'bg-blue-950/40 border-blue-500/50' : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+      isSelected ? 'bg-[#EC9A1E]/15 border-[#EC9A1E]/60 shadow-md' : 'bg-[#151922] border-[#2B3342] hover:border-[#3A4559]'
     }`;
     item.onclick = () => selectNEREntity(e.name);
 
-    let typeBadgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/20";
-    if (e.type === 'Condition') typeBadgeColor = "bg-rose-500/10 text-rose-400 border-rose-500/20";
-    if (e.type === 'Drug') typeBadgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-    if (e.type === 'Outcome') typeBadgeColor = "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
+    let typeBadgeColor = "bg-[#EC9A1E]/15 text-[#EC9A1E] border-[#EC9A1E]/30";
+    if (e.type === 'Condition') typeBadgeColor = "bg-[#E74A21]/15 text-[#E74A21] border-[#E74A21]/30";
+    if (e.type === 'Drug') typeBadgeColor = "bg-[#0460A9]/15 text-[#4ea8ff] border-[#0460A9]/30";
+    if (e.type === 'Outcome') typeBadgeColor = "bg-[#F7B516]/15 text-[#F7B516] border-[#F7B516]/30";
 
     item.innerHTML = `
       <div class="flex items-center space-x-2.5">
@@ -635,8 +635,8 @@ function renderNERFiltered() {
         <span class="text-xs font-semibold text-white">${e.name}</span>
       </div>
       <div class="flex items-center space-x-2.5 text-xs">
-        <span class="font-mono text-slate-500 text-[11px]">${e.cui}</span>
-        <span class="bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-bold text-[11px]">${e.papers_count} ${e.papers_count === 1 ? 'trial' : 'trials'}</span>
+        <span class="font-mono text-[#94A0B4] text-[11px]">${e.cui}</span>
+        <span class="bg-[#232A38] px-2 py-0.5 rounded text-[#E2E6EC] font-bold text-[11px] border border-[#2B3342]">${e.papers_count} ${e.papers_count === 1 ? 'trial' : 'trials'}</span>
       </div>
     `;
     container.appendChild(item);
@@ -887,15 +887,15 @@ function setGraphColorMode(mode) {
   const btnComm = document.getElementById('btn-mode-community');
 
   if (mode === 'entity') {
-    btnEntity?.classList.add('bg-blue-600', 'text-white');
-    btnEntity?.classList.remove('text-slate-400');
-    btnComm?.classList.remove('bg-blue-600', 'text-white');
-    btnComm?.classList.add('text-slate-400');
+    btnEntity?.classList.add('tab-active-novartis');
+    btnEntity?.classList.remove('text-[#94A0B4]');
+    btnComm?.classList.remove('tab-active-novartis');
+    btnComm?.classList.add('text-[#94A0B4]');
   } else {
-    btnComm?.classList.add('bg-blue-600', 'text-white');
-    btnComm?.classList.remove('text-slate-400');
-    btnEntity?.classList.remove('bg-blue-600', 'text-white');
-    btnEntity?.classList.add('text-slate-400');
+    btnComm?.classList.add('tab-active-novartis');
+    btnComm?.classList.remove('text-[#94A0B4]');
+    btnEntity?.classList.remove('tab-active-novartis');
+    btnEntity?.classList.add('text-[#94A0B4]');
   }
 
   applyGraphDataset();
@@ -909,11 +909,17 @@ function toggleChunksVisibility() {
 
   if (hideChunksActive) {
     if (label) label.innerText = "Show Chunks";
-    if (btn) btn.classList.add('bg-blue-600', 'text-white');
+    if (btn) {
+      btn.classList.add('bg-[#EC9A1E]', 'text-slate-950', 'font-bold');
+      btn.classList.remove('text-[#E2E6EC]');
+    }
     if (chk) chk.checked = false;
   } else {
     if (label) label.innerText = "Hide Chunks";
-    if (btn) btn.classList.remove('bg-blue-600', 'text-white');
+    if (btn) {
+      btn.classList.remove('bg-[#EC9A1E]', 'text-slate-950', 'font-bold');
+      btn.classList.add('text-[#E2E6EC]');
+    }
     if (chk) chk.checked = true;
   }
 
@@ -1007,17 +1013,17 @@ function switchHistoryTab(tabName) {
   const viewIng = document.getElementById('hist-view-ingestions');
 
   if (tabName === 'queries') {
-    btnQ?.classList.add('bg-blue-600', 'text-white');
-    btnQ?.classList.remove('text-slate-400');
-    btnIng?.classList.remove('bg-blue-600', 'text-white');
-    btnIng?.classList.add('text-slate-400');
+    btnQ?.classList.add('tab-active-novartis');
+    btnQ?.classList.remove('text-[#94A0B4]');
+    btnIng?.classList.remove('tab-active-novartis');
+    btnIng?.classList.add('text-[#94A0B4]');
     viewQ?.classList.remove('hidden');
     viewIng?.classList.add('hidden');
   } else {
-    btnIng?.classList.add('bg-blue-600', 'text-white');
-    btnIng?.classList.remove('text-slate-400');
-    btnQ?.classList.remove('bg-blue-600', 'text-white');
-    btnQ?.classList.add('text-slate-400');
+    btnIng?.classList.add('tab-active-novartis');
+    btnIng?.classList.remove('text-[#94A0B4]');
+    btnQ?.classList.remove('tab-active-novartis');
+    btnQ?.classList.add('text-[#94A0B4]');
     viewIng?.classList.remove('hidden');
     viewQ?.classList.add('hidden');
   }

@@ -26,7 +26,7 @@ class KnowledgeGraphManager:
             label="SGLT2 inhibitors",
             type="DrugClass",
             cui="C3890289",
-            color="#8B5CF6",
+            color="#EC9A1E",
             title="Pharmacologic Class: Sodium-Glucose Co-Transporter 2 Inhibitors"
         )
         
@@ -45,7 +45,7 @@ class KnowledgeGraphManager:
                 journal=art.journal,
                 study_design=art.study_design,
                 sample_size=art.sample_size,
-                color="#0284C7"
+                color="#C7C7C7"
             )
             
             pico = art.pico
@@ -61,7 +61,7 @@ class KnowledgeGraphManager:
                     label=f"Cohort (N={pop.n:,})" if pop.n else "Cohort (N/A)",
                     description=pop.description,
                     type="Population",
-                    color="#F59E0B",
+                    color="#F7B516",
                     title=f"Population: {pop.description}"
                 )
                 self.graph.add_edge(art_id, pop_id, relationship="ENROLLS")
@@ -73,7 +73,7 @@ class KnowledgeGraphManager:
                     label=pop.condition,
                     type="Condition",
                     cui=cond_cui,
-                    color="#EF4444",
+                    color="#E74A21",
                     title=f"Clinical Indication: {pop.condition} (CUI: {cond_cui})"
                 )
                 self.graph.add_edge(pop_id, cond_id, relationship="HAS_CONDITION")
@@ -88,7 +88,7 @@ class KnowledgeGraphManager:
                     type="Drug",
                     cui=inter.drug_cui,
                     rxnorm=inter.rxnorm,
-                    color="#10B981",
+                    color="#0460A9",
                     title=f"Therapeutic Agent: {inter.name} (RxNorm: {inter.rxnorm or 'N/A'})"
                 )
                 self.graph.add_edge(art_id, drug_id, relationship="STUDIES", dose=inter.dose)
@@ -103,7 +103,7 @@ class KnowledgeGraphManager:
                     label=out.name[:24] + ("..." if len(out.name) > 24 else ""),
                     full_name=out.name,
                     type="Outcome",
-                    color="#38BDF8",
+                    color="#E74A21",
                     title=f"Endpoint: {out.name} | {out.measure} {out.effect} ({out.ci_low}-{out.ci_high})"
                 )
                 self.graph.add_edge(
@@ -124,7 +124,7 @@ class KnowledgeGraphManager:
                     chunk_id,
                     label=f"§ {chunk.section_name}",
                     type="Chunk",
-                    color="#64748B",
+                    color="#656565",
                     title=f"Section: {chunk.section_name} | PMID:{pmid}\n{chunk.content[:150]}..."
                 )
                 self.graph.add_edge(art_id, chunk_id, relationship="CONTAINS_SECTION")
@@ -142,7 +142,7 @@ class KnowledgeGraphManager:
             communities = []
 
         community_palette = [
-            "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899", "#06B6D4", "#84CC16", "#F97316"
+            "#EC9A1E", "#E74A21", "#0460A9", "#8D1F1B", "#656565", "#C7C7C7", "#D97706", "#2563EB"
         ]
         node_community_map = {}
         for c_idx, comm in enumerate(communities):

@@ -2,6 +2,61 @@
   "created_at": "2026-10-19T12:39:15.213266Z",
   "queries": [
     {
+      "query_id": "q_1792429301699",
+      "timestamp": "2026-10-19T17:01:41.699276Z",
+      "query_text": "Which SGLT2 inhibitor trials reported kidney disease progression in CKD?",
+      "intent": "graph_entity",
+      "documents_count": 3,
+      "documents": [
+        {
+          "pmid": "36331190",
+          "title": "Empagliflozin in Patients with Chronic Kidney Disease (EMPA-KIDNEY)",
+          "journal": "New England Journal of Medicine (NEJM)",
+          "year": 2023,
+          "sample_size": 6609,
+          "drug": "Empagliflozin",
+          "primary_outcome": "Progression of Kidney Disease or CV Death"
+        },
+        {
+          "pmid": "32970396",
+          "title": "Dapagliflozin in Patients with Chronic Kidney Disease (DAPA-CKD)",
+          "journal": "New England Journal of Medicine (NEJM)",
+          "year": 2020,
+          "sample_size": 4304,
+          "drug": "Dapagliflozin",
+          "primary_outcome": "Composite Sustained eGFR Decline >=50%, ESKD, or Renal/CV Death"
+        },
+        {
+          "pmid": "30990260",
+          "title": "Canagliflozin and Renal Outcomes in Type 2 Diabetes and Nephropathy (CREDENCE)",
+          "journal": "New England Journal of Medicine (NEJM)",
+          "year": 2019,
+          "sample_size": 4401,
+          "drug": "Canagliflozin",
+          "primary_outcome": "Primary Renal Composite: ESKD, Doubling Creatinine, or Renal/CV Death"
+        }
+      ],
+      "synthesis_snippet": "Here is the evidence synthesis based strictly on the provided table and passages.\n\n---\n\n### 1. Empagliflozin vs. Placebo (EMPA-KIDNEY)\n*Study Design: RCT | Sample Size: N = 6,609* [PMID:36331190]\n\n- **Progression of Kidn...",
+      "refined_prompts": [
+        {
+          "category": "Comparative Head-to-Head",
+          "prompt": "Compare cardiovascular death and heart failure hospitalization hazard ratios between Sacubitril/Valsartan (PARADIGM-HF) and SGLT2 inhibitors (DAPA-HF, EMPEROR-Reduced).",
+          "rationale": "Evaluates comparative relative risk reductions across cornerstone neurohormonal and metabolic therapies."
+        },
+        {
+          "category": "Safety & Biomarker Deep-Dive",
+          "prompt": "Compare the incidence of hyperkalemia, acute kidney injury, and treatment discontinuation across heart failure and CKD trials.",
+          "rationale": "Pinpoints critical safety differentiators, renal hemodynamic impacts, and tolerability profiles."
+        },
+        {
+          "category": "Guideline & Class Landscape",
+          "prompt": "What is the multi-trial consensus regarding 4-pillar GDMT initiation and eGFR preservation across cardiorenal populations?",
+          "rationale": "Synthesizes guideline-directed medical therapy synergy and long-term renal trajectory benefits."
+        }
+      ],
+      "audit_badge": "100% Entailed | Zero Hallucinations | String Guard Passed"
+    },
+    {
       "query_id": "q_1792416482448",
       "timestamp": "2026-10-19T13:28:02.448643Z",
       "query_text": "Compare overall survival and rPFS hazard ratios between 177Lu-PSMA-617 and standard of care in mCRPC.",

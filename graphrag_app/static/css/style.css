@@ -1,13 +1,93 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Official Novartis Brand Tokens */
+  --novartis-saffron: #EC9A1E;
+  --novartis-saffron-light: #F7B516;
+  --novartis-flame: #E74A21;
+  --novartis-crimson: #8D1F1B;
+  --novartis-blue: #0460A9;
+
+  /* Novartis Dark Enterprise Neutral Palette */
+  --novartis-canvas: #0E1117;
+  --novartis-bg-elevated: #151922;
+  --novartis-card: #1C212C;
+  --novartis-card-hover: #232A38;
+  --novartis-border: #2B3342;
+  --novartis-border-light: #3A4559;
+  
+  /* Text & Labels */
+  --novartis-text-bright: #FFFFFF;
+  --novartis-text-light: #E2E6EC;
+  --novartis-text-muted: #94A0B4;
+  --novartis-text-slate: #64748B;
+}
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #0B0F19;
-  color: #E2E8F0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--novartis-canvas);
+  color: var(--novartis-text-light);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(236, 154, 30, 0.06) 0px, transparent 55%),
+    radial-gradient(at 100% 0%, rgba(231, 74, 33, 0.05) 0px, transparent 45%),
+    radial-gradient(at 50% 100%, rgba(4, 96, 169, 0.04) 0px, transparent 50%);
+  background-attachment: fixed;
 }
 
 .font-mono {
   font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glassmorphism surfaces */
+.novartis-glass {
+  background: rgba(21, 25, 34, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--novartis-border);
+}
+
+.novartis-card {
+  background: var(--novartis-card);
+  border: 1px solid var(--novartis-border);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.novartis-card:hover {
+  border-color: rgba(236, 154, 30, 0.45);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45), 0 0 15px -3px rgba(236, 154, 30, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Novartis Saffron Gradient CTA Button */
+.btn-saffron {
+  background: linear-gradient(135deg, #EC9A1E 0%, #E74A21 100%);
+  color: #0E1117;
+  font-weight: 700;
+  box-shadow: 0 4px 14px 0 rgba(236, 154, 30, 0.32);
+  transition: all 0.2s ease;
+}
+
+.btn-saffron:hover {
+  background: linear-gradient(135deg, #F5A623 0%, #EB5728 100%);
+  box-shadow: 0 6px 20px rgba(236, 154, 30, 0.48);
+  transform: translateY(-1px);
+  color: #000000;
+}
+
+/* Novartis Active Tab */
+.tab-active-novartis {
+  background: linear-gradient(135deg, #EC9A1E 0%, #E74A21 100%) !important;
+  color: #0E1117 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(236, 154, 30, 0.3) !important;
+}
+
+/* Knowledge Graph Container */
+#network-container {
+  width: 100%;
+  height: 650px;
+  background: radial-gradient(circle at center, #1B212D 0%, #0E1117 100%);
+  border: 1px solid var(--novartis-border);
 }
 
 /* Custom Sleek Scrollbar */
@@ -17,22 +97,23 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #111827;
+  background: #12151B;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: #2B3342;
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #4B5563;
+  background: #47536A;
 }
 
-/* Knowledge Graph Container */
-#network-container {
-  width: 100%;
-  height: 650px;
-  background: radial-gradient(circle at center, #111827 0%, #0B0F19 100%);
-  border: 1px solid #1F2937;
+/* Glow effects */
+.glow-saffron {
+  box-shadow: 0 0 20px rgba(236, 154, 30, 0.2);
+}
+
+.glow-flame {
+  box-shadow: 0 0 20px rgba(231, 74, 33, 0.2);
 }
