@@ -160,8 +160,10 @@ function fillAndIngest(query) {
 }
 
 let currentIngestionSuggestions = [];
+let isIngestionInProgress = false;
 
 function applySuggestedQueryByIndex(index, autoExecute = false) {
+  if (isIngestionInProgress && autoExecute) return;
   const s = currentIngestionSuggestions[index];
   if (!s) return;
   const input = document.getElementById('ingest-input');
@@ -326,6 +328,7 @@ async function fetchIngestionSuggestions(optionalQuery) {
 }
 
 async function ingestArticle() {
+  if (isIngestionInProgress) return;
   const input = document.getElementById('ingest-input');
   const val = input.value.trim();
   if (!val) return;
@@ -336,6 +339,8 @@ async function ingestArticle() {
   const btn = document.getElementById('ingest-btn');
   btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-xs"></i> <span>Ingesting (up to ${maxResults})...</span>`;
   btn.disabled = true;
+  isIngestionInProgress = true;
+  document.querySelectorAll('.ingest-card-btn').forEach(b => { b.disabled = true; b.classList.add('opacity-50'); });
 
   try {
     const res = await fetch('/api/articles/ingest', {
@@ -369,6 +374,8 @@ async function ingestArticle() {
     console.error("Ingestion failed:", err);
     alert("Ingestion error: " + err.message);
   } finally {
+    isIngestionInProgress = false;
+    document.querySelectorAll('.ingest-card-btn').forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
     btn.innerHTML = `<i class="fa-solid fa-magnifying-glass text-xs"></i> <span>Ingest to Graph</span>`;
     btn.disabled = false;
   }

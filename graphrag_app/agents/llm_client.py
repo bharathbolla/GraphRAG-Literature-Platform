@@ -289,7 +289,9 @@ Return ONLY valid JSON adhering strictly to this schema:
             return []
 
         candidate_embedding_models = []
-        if settings.EMBEDDING_MODEL:
+        if getattr(self, "_active_embedding_model", None):
+            candidate_embedding_models.append(self._active_embedding_model)
+        if settings.EMBEDDING_MODEL and settings.EMBEDDING_MODEL not in candidate_embedding_models:
             candidate_embedding_models.append(settings.EMBEDDING_MODEL)
         for m in settings.EMBEDDING_FALLBACK_MODELS:
             if m not in candidate_embedding_models:
@@ -312,6 +314,7 @@ Return ONLY valid JSON adhering strictly to this schema:
                     )
                     if res and res.embeddings:
                         batch_result = [list(e.values) for e in res.embeddings]
+                        self._active_embedding_model = model_name
                         logger.info(f"GeminiClient: Generated {len(batch_result)} embeddings ({settings.EMBEDDING_DIMENSIONS}d) via {model_name}.")
                         break
                 except Exception as e:

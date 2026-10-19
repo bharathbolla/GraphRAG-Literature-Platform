@@ -30,30 +30,31 @@ class VectorStore:
         })
 
     def add_chunks(self, chunk_dicts: List[Dict[str, Any]]):
-        """Batch adds chunks and computes dense embeddings if client is active."""
+        """Batch adds chunks and computes dense embeddings incrementally if client is active."""
         if not chunk_dicts:
             return
 
         from agents.llm_client import gemini_client
 
-        dense_embeddings = []
-        if gemini_client.is_available():
-            texts = [c["text"] for c in chunk_dicts]
+        chunks_needing_emb = [c for c in chunk_dicts if not c.get("embedding")]
+        if chunks_needing_emb and gemini_client.is_available():
+            texts = [c["text"] for c in chunks_needing_emb]
             try:
                 dense_embeddings = gemini_client.generate_embeddings(texts)
-                logger.info(f"VectorStore: Batch embedded {len(dense_embeddings)} chunks with text-embedding-004 standard.")
+                logger.info(f"VectorStore: Batch embedded {len(dense_embeddings)} new chunks.")
+                for idx, c in enumerate(chunks_needing_emb):
+                    if idx < len(dense_embeddings):
+                        c["embedding"] = dense_embeddings[idx]
             except Exception as e:
                 logger.warning(f"VectorStore: Dense embedding failed, using lexical fallback: {e}")
-                dense_embeddings = []
 
-        for idx, c in enumerate(chunk_dicts):
-            emb = dense_embeddings[idx] if (dense_embeddings and idx < len(dense_embeddings)) else None
+        for c in chunk_dicts:
             self.add_chunk(
                 chunk_id=c["chunk_id"],
                 pmid=c["pmid"],
                 section=c["section"],
                 text=c["text"],
-                embedding=emb
+                embedding=c.get("embedding")
             )
 
     def has_dense_embeddings(self) -> bool:

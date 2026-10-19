@@ -79,21 +79,24 @@ async def ingest_article(req: IngestRequest):
     existing_pmids = {a.pmid for a in app_state.articles}
     newly_added = []
     
-    for new_article in articles_to_process:
-        if new_article.pmid in existing_pmids:
-            continue
-            
-        # 2. Agent 2 PICO Extraction with String Guard
-        pico_data = app_state.extraction_guard_agent.extract_and_verify(new_article)
-        new_article.pico = pico_data
-        
-        # 3. Agent 3 Ontology Normalization
-        entities = app_state.ontology_agent.normalize_article_entities(new_article)
-        new_article.entities = entities
-        
-        app_state.articles.append(new_article)
-        existing_pmids.add(new_article.pmid)
-        newly_added.append(new_article)
+    from concurrent.futures import ThreadPoolExecutor
+
+    def process_article(art):
+        pico_data = app_state.extraction_guard_agent.extract_and_verify(art)
+        art.pico = pico_data
+        entities = app_state.ontology_agent.normalize_article_entities(art)
+        art.entities = entities
+        return art
+
+    candidates = [a for a in articles_to_process if a.pmid not in existing_pmids]
+    if candidates:
+        max_workers = min(5, len(candidates))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            processed_articles = list(executor.map(process_article, candidates))
+        for art in processed_articles:
+            app_state.articles.append(art)
+            existing_pmids.add(art.pmid)
+            newly_added.append(art)
         
     if newly_added:
         # Re-synchronize Knowledge Graph & Vector Store

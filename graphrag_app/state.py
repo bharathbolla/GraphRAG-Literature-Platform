@@ -38,6 +38,13 @@ class AppState:
     def sync_graph_and_vectors(self):
         """Synchronizes knowledge graph and vector store from active articles."""
         self.kg_manager.rebuild_from_articles(self.articles)
+        
+        # Preserve cached embeddings for existing chunks to avoid re-embedding
+        cached_embeddings = {
+            c["chunk_id"]: c["embedding"]
+            for c in self.vector_store.chunks
+            if c.get("embedding") is not None
+        }
         self.vector_store.clear()
         
         all_chunks = []
@@ -48,11 +55,13 @@ class AppState:
                 sec_name = "Abstract"
                 if ":" in sec:
                     sec_name = sec.split(":")[0].strip()
+                chk_id = f"chk_{art.pmid}_{idx}"
                 all_chunks.append({
-                    "chunk_id": f"chk_{art.pmid}_{idx}",
+                    "chunk_id": chk_id,
                     "pmid": art.pmid,
                     "section": sec_name,
-                    "text": sec
+                    "text": sec,
+                    "embedding": cached_embeddings.get(chk_id)
                 })
         
         self.vector_store.add_chunks(all_chunks)
