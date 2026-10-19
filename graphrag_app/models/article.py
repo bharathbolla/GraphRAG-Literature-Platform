@@ -68,3 +68,5 @@ class ArticleStats(BaseModel):
     total_edges: int
     unique_entities: int
     benchmark_name: str
+    llm_model: Optional[str] = "gemini-2.5-flash"
+    llm_active: Optional[bool] = False

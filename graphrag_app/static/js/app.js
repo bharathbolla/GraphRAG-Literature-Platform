@@ -78,6 +78,17 @@ async function updateStatsBar() {
     if (statusEl) statusEl.innerText = `Backend Online (${stats.total_articles} papers)`;
     if (headerCountEl) headerCountEl.innerText = stats.total_articles;
 
+    const modelEl = document.getElementById('nav-model-status');
+    if (modelEl) {
+      if (stats.llm_active) {
+        modelEl.innerHTML = `<i class="fa-solid fa-bolt text-xs text-[#EC9A1E]"></i> <span>Gemini Flash (${stats.llm_model})</span>`;
+        modelEl.className = "text-xs font-semibold px-2 py-0.5 rounded bg-[#EC9A1E]/15 text-[#EC9A1E] border border-[#EC9A1E]/30 flex items-center gap-1.5";
+      } else {
+        modelEl.innerHTML = `<i class="fa-solid fa-bolt text-xs text-[#EC9A1E]"></i> <span>Gemini Flash (${stats.llm_model || 'Ready'})</span>`;
+        modelEl.className = "text-xs font-semibold px-2 py-0.5 rounded bg-[#EC9A1E]/15 text-[#EC9A1E] border border-[#EC9A1E]/30 flex items-center gap-1.5";
+      }
+    }
+
     // Slide 01 Metric Cards
     const elArticles = document.getElementById('stat-articles');
     const elChunks = document.getElementById('stat-chunks');

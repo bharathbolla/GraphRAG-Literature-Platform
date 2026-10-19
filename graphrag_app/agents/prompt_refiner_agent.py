@@ -2,6 +2,8 @@ import re
 from typing import List, Set
 from models.chat import RefinedPrompt, QueryIntent
 from models.article import Article, IngestionPromptSuggestion
+from agents.llm_client import gemini_client
+from config import settings
 
 class PromptRefinerAgent:
     """
@@ -21,7 +23,25 @@ class PromptRefinerAgent:
         matched_pmids: Set[str],
         active_articles: List[Article]
     ) -> List[RefinedPrompt]:
-        """Generates 3 refined prompt variants tailored to the clinical entities and disease domain."""
+        """Generates 3 refined prompt variants tailored dynamically via Gemini Flash or domain heuristics."""
+        # 1. Attempt dynamic prompt generation via Gemini Flash
+        if settings.USE_DYNAMIC_AGENTS and gemini_client.is_available():
+            matched_articles = [a for a in active_articles if a.pmid in matched_pmids] or active_articles
+            dynamic_suggestions = gemini_client.generate_dynamic_prompts(query, matched_articles)
+            if dynamic_suggestions:
+                prompts = []
+                for s in dynamic_suggestions:
+                    prompts.append(
+                        RefinedPrompt(
+                            category=s.get("category", "Comparative Head-to-Head"),
+                            prompt=s.get("prompt", query),
+                            rationale=s.get("rationale", "Dynamic clinical inquiry refinement powered by Gemini Flash.")
+                        )
+                    )
+                if len(prompts) == 3:
+                    return prompts
+
+        # 2. Heuristic domain fallback
         q = query.lower()
 
         # Domain 1: Heart Failure & Cardiorenal (Entresto, SGLT2i, CKD)

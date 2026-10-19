@@ -23,6 +23,9 @@ async def get_stats():
     # Calculate thematic communities
     thematic_communities = max(5, int(total_articles * 1.15))
     
+    from agents.llm_client import gemini_client
+    from config import settings
+
     return ArticleStats(
         indexed_articles=total_articles,
         section_chunks=section_chunks if section_chunks > 0 else 32,
@@ -34,7 +37,9 @@ async def get_stats():
         total_nodes=total_nodes,
         total_edges=total_edges,
         unique_entities=len(entities_set),
-        benchmark_name="SGLT2 Inhibitors in Cardiorenal Disease (7 Landmark Phase 3 RCTs)"
+        benchmark_name="SGLT2 Inhibitors in Cardiorenal Disease (7 Landmark Phase 3 RCTs)",
+        llm_model=settings.GEMINI_MODEL,
+        llm_active=gemini_client.is_available()
     )
 
 @router.get("/articles")
