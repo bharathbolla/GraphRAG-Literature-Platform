@@ -68,5 +68,8 @@ class ArticleStats(BaseModel):
     total_edges: int
     unique_entities: int
     benchmark_name: str
-    llm_model: Optional[str] = "gemini-2.5-flash"
+    llm_model: Optional[str] = "gemini-3.8-flash"
     llm_active: Optional[bool] = False
+    embedding_model: Optional[str] = "text-embedding-004"
+    embedding_dimensions: Optional[int] = 768
+    dense_vectors_active: Optional[bool] = True

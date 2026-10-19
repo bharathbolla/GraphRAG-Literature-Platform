@@ -122,3 +122,22 @@ def test_prompt_refiner_ingestion_suggestions():
     gen_suggs = refiner.generate_ingestion_suggestions("")
     assert len(gen_suggs) == 3
 
+def test_hybrid_vector_store():
+    vs = VectorStore()
+    vs.add_chunk("c1", "36331190", "Background", "Chronic kidney disease affects millions worldwide.")
+    vs.add_chunk("c2", "36331190", "Results", "Empagliflozin reduced the risk of kidney disease progression by 28%.")
+    vs.add_chunk("c3", "32970396", "Primary Endpoint", "Dapagliflozin significantly reduced composite renal failure.")
+
+    # Search with clinical section boost
+    results = vs.search("kidney disease progression")
+    assert len(results) >= 2
+    # Verify results section is prioritized
+    assert results[0]["section"] in ("Results", "Primary Endpoint")
+    assert vs.has_dense_embeddings() is False
+
+    # Test with dense mock embeddings (768-dim standard)
+    mock_emb1 = [0.1] * 768
+    mock_emb2 = [0.8] * 768
+    vs.add_chunk("c4", "30990260", "Results", "Canagliflozin reduced ESRD", embedding=mock_emb2)
+    assert vs.has_dense_embeddings() is True
+

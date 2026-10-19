@@ -40,6 +40,15 @@ class Settings(BaseModel):
         "gemini-1.5-flash"
     ]
     USE_DYNAMIC_AGENTS: bool = True
+
+    # Vector Embedding Settings (text-embedding-004 standard)
+    EMBEDDING_MODEL: str = os.environ.get("EMBEDDING_MODEL", "text-embedding-004")
+    EMBEDDING_DIMENSIONS: int = int(os.environ.get("EMBEDDING_DIMENSIONS", 768))
+    EMBEDDING_FALLBACK_MODELS: List[str] = [
+        "text-embedding-004",
+        "gemini-embedding-001",
+        "gemini-embedding-2"
+    ]
     
     # Cloud Deployment Settings
     GCP_PROJECT: str = os.environ.get("GCP_PROJECT", "graphrag-novartis")

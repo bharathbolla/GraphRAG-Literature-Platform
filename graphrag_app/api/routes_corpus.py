@@ -39,7 +39,10 @@ async def get_stats():
         unique_entities=len(entities_set),
         benchmark_name="SGLT2 Inhibitors in Cardiorenal Disease (7 Landmark Phase 3 RCTs)",
         llm_model=settings.GEMINI_MODEL,
-        llm_active=gemini_client.is_available()
+        llm_active=gemini_client.is_available(),
+        embedding_model=settings.EMBEDDING_MODEL,
+        embedding_dimensions=settings.EMBEDDING_DIMENSIONS,
+        dense_vectors_active=app_state.vector_store.has_dense_embeddings()
     )
 
 @router.get("/articles")

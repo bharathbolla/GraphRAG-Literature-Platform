@@ -274,5 +274,57 @@ Return ONLY valid JSON adhering strictly to this schema:
 
         return None
 
+    def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generates dense semantic vector embeddings for input texts.
+        Prioritizes text-embedding-004 and modern gemini-embedding models with 768 output dimensions.
+        Falls back gracefully if offline or unconfigured.
+        """
+        if not self.is_available() or not texts:
+            return []
+
+        try:
+            from google.genai import types
+        except ImportError:
+            return []
+
+        candidate_embedding_models = []
+        if settings.EMBEDDING_MODEL:
+            candidate_embedding_models.append(settings.EMBEDDING_MODEL)
+        for m in settings.EMBEDDING_FALLBACK_MODELS:
+            if m not in candidate_embedding_models:
+                candidate_embedding_models.append(m)
+
+        batch_size = 32
+        all_embeddings: List[List[float]] = []
+
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i : i + batch_size]
+            batch_result = None
+
+            for model_name in candidate_embedding_models:
+                try:
+                    cfg = types.EmbedContentConfig(output_dimensionality=settings.EMBEDDING_DIMENSIONS)
+                    res = self._client.models.embed_content(
+                        model=model_name,
+                        contents=batch if len(batch) > 1 else batch[0],
+                        config=cfg
+                    )
+                    if res and res.embeddings:
+                        batch_result = [list(e.values) for e in res.embeddings]
+                        logger.info(f"GeminiClient: Generated {len(batch_result)} embeddings ({settings.EMBEDDING_DIMENSIONS}d) via {model_name}.")
+                        break
+                except Exception as e:
+                    logger.debug(f"GeminiClient: Embedding attempt with {model_name} failed: {e}")
+                    continue
+
+            if batch_result:
+                all_embeddings.extend(batch_result)
+            else:
+                logger.warning(f"GeminiClient: Failed to generate dense embeddings for batch.")
+                return []
+
+        return all_embeddings
+
 # Singleton LLM client instance
 gemini_client = GeminiClient()

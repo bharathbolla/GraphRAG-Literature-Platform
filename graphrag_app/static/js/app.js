@@ -80,11 +80,12 @@ async function updateStatsBar() {
 
     const modelEl = document.getElementById('nav-model-status');
     if (modelEl) {
+      const embName = stats.embedding_model || 'text-embedding-004';
       if (stats.llm_active) {
-        modelEl.innerHTML = `<i class="fa-solid fa-bolt text-xs text-[#EC9A1E]"></i> <span>Gemini Flash (${stats.llm_model})</span>`;
+        modelEl.innerHTML = `<i class="fa-solid fa-bolt text-xs text-[#EC9A1E]"></i> <span>Gemini 3.8 Flash • ${embName}</span>`;
         modelEl.className = "text-xs font-semibold px-2 py-0.5 rounded bg-[#EC9A1E]/15 text-[#EC9A1E] border border-[#EC9A1E]/30 flex items-center gap-1.5";
       } else {
-        modelEl.innerHTML = `<i class="fa-solid fa-bolt text-xs text-[#EC9A1E]"></i> <span>Gemini Flash (${stats.llm_model || 'Ready'})</span>`;
+        modelEl.innerHTML = `<i class="fa-solid fa-bolt text-xs text-[#EC9A1E]"></i> <span>Gemini 3.8 Flash • ${embName}</span>`;
         modelEl.className = "text-xs font-semibold px-2 py-0.5 rounded bg-[#EC9A1E]/15 text-[#EC9A1E] border border-[#EC9A1E]/30 flex items-center gap-1.5";
       }
     }

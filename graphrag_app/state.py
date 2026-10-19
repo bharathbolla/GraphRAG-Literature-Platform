@@ -40,6 +40,7 @@ class AppState:
         self.kg_manager.rebuild_from_articles(self.articles)
         self.vector_store.clear()
         
+        all_chunks = []
         for art in self.articles:
             # Chunk abstract into sections
             sections = art.abstract.split("\n")
@@ -47,12 +48,14 @@ class AppState:
                 sec_name = "Abstract"
                 if ":" in sec:
                     sec_name = sec.split(":")[0].strip()
-                self.vector_store.add_chunk(
-                    chunk_id=f"chk_{art.pmid}_{idx}",
-                    pmid=art.pmid,
-                    section=sec_name,
-                    text=sec
-                )
+                all_chunks.append({
+                    "chunk_id": f"chk_{art.pmid}_{idx}",
+                    "pmid": art.pmid,
+                    "section": sec_name,
+                    "text": sec
+                })
+        
+        self.vector_store.add_chunks(all_chunks)
 
 # Global runtime state instance
 app_state = AppState()
