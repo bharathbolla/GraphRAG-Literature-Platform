@@ -1,0 +1,38 @@
+00.0-05.0s
+Pharma teams need to connect evidence scattered across research papers.
+
+05.0-14.0s
+This tool can support R and D with target research, clinical development with trial comparisons, and medical affairs with cited answers.
+
+14.0-22.0s
+Market access teams can compare outcomes, while safety and regulatory reviewers can trace literature findings back to sources.
+
+22.0-31.0s
+Hybrid Graph RAG links studies through shared concepts, then ranks relevant passages. This supports cross-study comparisons and counts beyond similarity search alone.
+
+31.0-35.0s
+Better retrieval still needs validation against a vector-only baseline.
+
+35.0-41.0s
+Start by searching PubMed. Click Ingest to add matching papers.
+
+41.0-48.0s
+Here, papers increase from three to seven. Section-aware text chunks grow from ten to thirty-two.
+
+48.0-55.0s
+Extract entities and PICO fields. Normalize synonyms to avoid duplicate concept nodes.
+
+55.0-64.0s
+Graph edges rise from thirty-four to eighty-eight, normalized entities from eighteen to thirty-two, and thematic communities from five to eight.
+
+64.0-70.0s
+The graph view expands from twenty-one to thirty-nine nodes, connecting studies and concepts.
+
+70.0-75.0s
+Ask questions in Chat, or browse conditions, drugs, and outcomes through NER.
+
+75.0-82.0s
+Use the PICO grid to compare populations, interventions, comparators, and outcomes, then export evidence.
+
+82.0-90.0s
+Finally, inspect the evidence table and citations. Trace each finding back to its supporting source sentence.

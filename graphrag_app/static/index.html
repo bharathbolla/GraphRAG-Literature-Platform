@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GraphRAG Literature Platform v0.1.0 | Multi-Doc Synthesis, NER & PICO Evidence</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Vis-Network for Knowledge Graph -->
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar bg-[#0B0F19] text-slate-200">
+
+  <!-- TOP ENTERPRISE NAVBAR -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-6 py-3.5 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-dna text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Novartis AI Hackathon</span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="nav-backend-status">Backend Online (7 papers)</span>
+            </span>
+          </div>
+          <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2 mt-0.5">
+            GraphRAG Literature Platform <span class="text-xs font-mono text-cyan-400">v0.1.0</span>
+            <span class="text-xs font-normal text-slate-400 hidden sm:inline">| Biomedical Multi-Doc Synthesis & PICO Evidence</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Bar -->
+      <div class="flex items-center space-x-3 text-xs">
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+          <i class="fa-solid fa-book-medical text-blue-400"></i>
+          <span class="text-slate-400">Corpus:</span>
+          <span id="nav-article-count" class="font-bold text-white">7 RCTs</span>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+          <i class="fa-solid fa-users text-amber-400"></i>
+          <span class="text-slate-400">Cohort N:</span>
+          <span id="nav-patient-count" class="font-bold text-white">48,794</span>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+          <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+          <span class="text-slate-400">Provenance:</span>
+          <span class="font-bold text-emerald-400">100% Entailed</span>
+        </div>
+        <button onclick="openHistoryModal()" class="bg-purple-950/50 hover:bg-purple-900/60 border border-purple-500/30 text-purple-300 hover:text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-clock-rotate-left text-xs text-purple-400"></i>
+          <span>Audit Log (<span id="nav-history-count">0</span>)</span>
+        </button>
+        <button onclick="resetBenchmark()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-rotate-right text-xs"></i>
+          <span>Reset SGLT2i Corpus</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-slate-900/90 border-b border-slate-800 px-6 backdrop-blur sticky top-16 z-30">
+    <div class="max-w-7xl mx-auto flex space-x-1 sm:space-x-3 overflow-x-auto py-2">
+      <button onclick="switchTab('corpus')" id="tab-btn-corpus" class="tab-btn active px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-blue-600 text-white shadow-sm transition">
+        <i class="fa-solid fa-database text-xs"></i>
+        <span>1. Literature Corpus</span>
+      </button>
+      <button onclick="switchTab('chat')" id="tab-btn-chat" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-comments text-xs"></i>
+        <span>2. Multi-Document Literature Chat & Synthesis</span>
+      </button>
+      <button onclick="switchTab('ner')" id="tab-btn-ner" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-tags text-xs"></i>
+        <span>3. Biomedical NER and Concept Explorer</span>
+      </button>
+      <button onclick="switchTab('pico')" id="tab-btn-pico" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-table-cells text-xs"></i>
+        <span>4. Structured PICO Evidence Extraction Grid</span>
+      </button>
+      <button onclick="switchTab('graph')" id="tab-btn-graph" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-diagram-project text-xs"></i>
+        <span>5. Interactive Knowledge Graph</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- ==================== TAB 1: LITERATURE CORPUS ==================== -->
+    <section id="view-corpus" class="space-y-6">
+
+      <!-- Slide 01 Metric Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-sm">
+          <div class="text-[11px] font-bold uppercase text-slate-400 tracking-wider">INDEXED ARTICLES</div>
+          <div id="stat-articles" class="text-2xl font-extrabold text-blue-400 mt-1">7</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Phase 3 RCTs</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-sm">
+          <div class="text-[11px] font-bold uppercase text-slate-400 tracking-wider">SECTION CHUNKS</div>
+          <div id="stat-chunks" class="text-2xl font-extrabold text-indigo-400 mt-1">32</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Section-aware</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-sm">
+          <div class="text-[11px] font-bold uppercase text-slate-400 tracking-wider">KNOWLEDGE GRAPH EDGES</div>
+          <div id="stat-edges" class="text-2xl font-extrabold text-emerald-400 mt-1">88</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Extracted relations</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-sm">
+          <div class="text-[11px] font-bold uppercase text-slate-400 tracking-wider">NORMALIZED ENTITIES</div>
+          <div id="stat-entities" class="text-2xl font-extrabold text-amber-400 mt-1">32</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">UMLS / MeSH</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-sm col-span-2 md:col-span-1">
+          <div class="text-[11px] font-bold uppercase text-slate-400 tracking-wider">THEMATIC COMMUNITIES</div>
+          <div id="stat-communities" class="text-2xl font-extrabold text-cyan-400 mt-1">8</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Global Leiden</div>
+        </div>
+      </div>
+
+      <!-- Ingest to Graph Container (Slide 02 & 03) -->
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-down text-blue-400"></i> Fetch & Ingest from PubMed E-Utilities
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Enter a PubMed ID (PMID) or topic query to fetch, section-parse, and run schema-constrained PICO extraction into the GraphRAG store.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2.5">
+          <div class="relative flex-1">
+            <input type="text" id="ingest-input" placeholder="PMID(s) or search query (e.g. 25176015, 31475794 or heart failure sacubitril empagliflozin)..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono">
+          </div>
+          <select id="ingest-max-results" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none">
+            <option value="5">Fetch 5 Trials</option>
+            <option value="10" selected>Fetch 10 Trials</option>
+            <option value="15">Fetch 15 Trials</option>
+            <option value="20">Fetch 20 Trials</option>
+          </select>
+          <button onclick="ingestArticle()" id="ingest-btn" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition shadow-md shadow-blue-600/20 whitespace-nowrap">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+            <span>Ingest to Graph</span>
+          </button>
+        </div>
+
+        <!-- Multi-Trial Landscape Query Chips -->
+        <div class="flex flex-wrap gap-2 pt-1 text-xs">
+          <span class="text-slate-400 self-center text-[11px] font-medium mr-1">Landscape Queries:</span>
+          <button onclick="fillAndIngest('(sacubitril OR empagliflozin OR dapagliflozin) heart failure phase 3 trial')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center gap-1 transition">
+            <span>❤️ HF: Entresto + SGLT2i Landscape</span>
+          </button>
+          <button onclick="fillAndIngest('(ribociclib OR palbociclib OR abemaciclib) breast cancer phase 3')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center gap-1 transition">
+            <span>🎗️ Breast Cancer: CDK4/6 Class</span>
+          </button>
+          <button onclick="fillAndIngest('(secukinumab OR ixekizumab OR guselkumab) psoriasis phase 3 trial')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center gap-1 transition">
+            <span>🛡️ Psoriasis: IL-17 & IL-23 Biologics</span>
+          </button>
+          <button onclick="fillAndIngest('(ofatumumab OR ocrelizumab OR teriflunomide) multiple sclerosis phase 3')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 flex items-center gap-1 transition">
+            <span>🧠 MS: B-Cell & Oral DMT Landscape</span>
+          </button>
+        </div>
+
+        <!-- Slide 03 Success Banner -->
+        <div id="ingest-success-banner" class="hidden bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-3.5 flex items-center justify-between text-xs text-emerald-300">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+            <span id="ingest-success-message">Success: Ingested & parsed into section chunks, KG edges, and extracted PICO schema with 0 hallucinations.</span>
+          </div>
+          <button onclick="dismissIngestBanner()" class="text-emerald-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Ingestion Multi-Prompt Suggestions Section -->
+        <div id="ingest-suggestions-section" class="pt-3 border-t border-slate-800/80 space-y-2.5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 text-xs">
+                <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+              </span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">
+                High-Yield Multi-Prompt Ingestion Suggestions
+              </h3>
+              <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700 hidden sm:inline-block">MeSH & Boolean Optimized</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="fetchIngestionSuggestions()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium hover:underline">
+                <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Refresh Suggestions
+              </button>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            Select an autonomous query strategy to expand trial recall, include active comparators, and filter out noisy review articles:
+          </p>
+          <div id="ingest-suggestions-container" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Corpus Articles Grid Header -->
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-book-journal-whills text-slate-400"></i> Corpus Articles (<span id="articles-count-header">7</span>)
+        </h3>
+        <span class="text-xs text-slate-500">Multicenter Phase 3 Double-Blind RCTs</span>
+      </div>
+
+      <!-- Articles Grid -->
+      <div id="articles-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: MULTI-DOC CHAT & SYNTHESIS ==================== -->
+    <section id="view-chat" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-robot text-blue-400"></i> Multi-Document Literature Chat & Synthesis
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              Ask questions across multiple clinical trial publications. GraphRAG routes your query through Knowledge Graph traversal, Vector Similarity, or Hybrid search with strict provenance auditing.
+            </p>
+          </div>
+          <!-- Route Dropdown -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 whitespace-nowrap">Route Strategy:</span>
+            <select id="chat-route-select" class="bg-slate-800 border border-slate-700 text-xs text-cyan-300 rounded-lg px-3 py-1.5 focus:outline-none">
+              <option value="auto">Auto Route (Hybrid)</option>
+              <option value="graph_entity">Graph Traversal (Entities)</option>
+              <option value="vector_fact">Dense Vector Search</option>
+              <option value="global_thematic">Leiden Global Thematic</option>
+              <option value="aggregation">Deterministic Aggregation</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4 Query Suggestion Chips from Slide 04 & 14 -->
+        <div class="flex flex-wrap gap-2 pt-1">
+          <span class="text-xs text-slate-500 self-center font-medium mr-1">Query Examples:</span>
+          <button onclick="fillAndSubmitChat('Which SGLT2 inhibitor trials reported kidney disease progression in CKD patients?')" class="text-xs bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+            <span>🔬 SGLT2i trials with kidney progression in CKD</span>
+          </button>
+          <button onclick="fillAndSubmitChat('Compare all-cause mortality and heart failure hospitalization hazard ratios across trials.')" class="text-xs bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+            <span>📊 Compare all-cause mortality across trials</span>
+          </button>
+          <button onclick="fillAndSubmitChat('How many phase 3 RCTs studied SGLT2 inhibitors vs placebo?')" class="text-xs bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+            <span>🔢 How many phase 3 RCTs tested SGLT2i vs placebo?</span>
+          </button>
+          <button onclick="fillAndSubmitChat('What are the primary clinical consensus themes across the cardiorenal corpus?')" class="text-xs bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+            <span>🌐 Primary clinical consensus themes (Global Leiden)</span>
+          </button>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="flex gap-2 pt-1">
+          <input type="text" id="chat-input" placeholder="Ask a cross-study clinical question (e.g. SGLT2i effect sizes in CKD)..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+          <button onclick="sendChatMessage()" id="chat-submit-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-blue-600/20 whitespace-nowrap">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+            <span>Synthesize</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Response Output Card (Slide 05 & Slide 14) -->
+      <div id="chat-response-card" class="hidden bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden space-y-0">
+
+        <!-- Top Route & Audit Header Banner -->
+        <div class="p-5 border-b border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span id="chat-intent-badge" class="px-2.5 py-1 rounded-md text-xs font-bold font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Route: graph_entity</span>
+            <span id="chat-route-explanation" class="text-xs text-slate-400">Detected cross-study / entity-centric query requiring multi-hop graph expansion & normalization.</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="chat-audit-badge" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+              <i class="fa-solid fa-check-double text-xs"></i>
+              <span>100% Entailed | Zero Hallucinations</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- TRI-VIEW SUB-TABS (Slide 05: Synthesis Answer | Evidence Table (14) | Citations (7)) -->
+        <div class="px-5 border-b border-slate-800 bg-slate-900/90 flex space-x-2 py-2">
+          <button onclick="switchChatSubTab('synthesis')" id="subtab-btn-synthesis" class="chat-subtab active px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition flex items-center gap-1.5">
+            <i class="fa-solid fa-align-left text-[11px]"></i>
+            <span>Synthesis Answer</span>
+          </button>
+          <button onclick="switchChatSubTab('evidence')" id="subtab-btn-evidence" class="chat-subtab px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-table-list text-[11px]"></i>
+            <span>Evidence Table (<span id="chat-evidence-count">14</span>)</span>
+          </button>
+          <button onclick="switchChatSubTab('citations')" id="subtab-btn-citations" class="chat-subtab px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-bookmark text-[11px]"></i>
+            <span>Citations (<span id="chat-citations-count">7</span>)</span>
+          </button>
+        </div>
+
+        <!-- SUB-VIEW 1: Synthesis Answer -->
+        <div id="subview-synthesis" class="p-6 space-y-5">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Cross-Study Clinical Synthesis</h3>
+            <div id="chat-prose" class="text-slate-200 text-sm leading-relaxed space-y-2 whitespace-pre-line bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 font-normal">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+          <!-- 3 Refined Prompt Suggestions Section -->
+          <div id="chat-refined-prompts-section" class="pt-4 border-t border-slate-800/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                <span>Explore Refined Clinical Angles (3 Suggested Variations)</span>
+              </h4>
+              <span class="text-[11px] text-slate-500">Click any card to re-synthesize query</span>
+            </div>
+            <div id="refined-prompts-container" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-VIEW 2: Structured Evidence Table -->
+        <div id="subview-evidence" class="hidden p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Structured Comparative Evidence Table</h3>
+            <span class="text-xs text-slate-500">Every hazard ratio is linked to verbatim study passages</span>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-800">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase font-bold border-b border-slate-800">
+                <tr>
+                  <th class="p-3">Study / PMID</th>
+                  <th class="p-3">Intervention</th>
+                  <th class="p-3">Population</th>
+                  <th class="p-3">Clinical Outcome</th>
+                  <th class="p-3">Effect Size</th>
+                  <th class="p-3">95% CI</th>
+                  <th class="p-3">P-Value</th>
+                  <th class="p-3">Verbatim Proof</th>
+                </tr>
+              </thead>
+              <tbody id="chat-evidence-tbody" class="divide-y divide-slate-800 bg-slate-900/40">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUB-VIEW 3: Citations Cards -->
+        <div id="subview-citations" class="hidden p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Cited Landmark Publications</h3>
+            <span class="text-xs text-slate-500">Verified PubMed indexed studies</span>
+          </div>
+          <div id="chat-citations-container" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: BIOMEDICAL NER AND CONCEPT EXPLORER ==================== -->
+    <section id="view-ner" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-tags text-purple-400"></i> Biomedical NER and Concept Explorer
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Normalized biomedical entities mapped to standard UMLS Concept Unique Identifiers (CUIs), MeSH IDs, and RxNorm codes.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="relative">
+            <input type="text" id="ner-search-input" oninput="handleNERSearch()" placeholder="Filter concepts..." class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 w-44">
+            <i class="fa-solid fa-magnifying-glass absolute right-2.5 top-2 text-slate-500 text-[10px]"></i>
+          </div>
+          <button onclick="filterNER('All')" id="ner-cat-all" class="ner-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white">All (32)</button>
+          <button onclick="filterNER('Condition')" id="ner-cat-cond" class="ner-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">Conditions (14)</button>
+          <button onclick="filterNER('Drug')" id="ner-cat-drug" class="ner-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">Drugs (6)</button>
+          <button onclick="filterNER('Outcome')" id="ner-cat-out" class="ner-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">Outcomes (12)</button>
+          <a href="/api/ner/export/concepts.json" download class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ml-2 shadow-sm">
+            <i class="fa-solid fa-file-arrow-down text-xs"></i>
+            <span>Export Concept IDs (JSON)</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Two-Pane Layout (Slide 06, 10, 11, 12) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Pane: Normalized Biomedical Concepts (40% width) -->
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-slate-500"></i> Normalized Concepts (<span id="ner-concepts-count">32</span>)
+            </h3>
+            <span class="text-[11px] text-slate-500">Click to inspect connections</span>
+          </div>
+          <div id="ner-list-container" class="space-y-2 max-h-[620px] overflow-y-auto pr-2 custom-scrollbar">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Right Pane: Concept Inspector with Co-occurrence & Source Mentions (60% width) -->
+        <div class="lg:col-span-7 space-y-5">
+
+          <!-- Active Entity Details Card -->
+          <div id="ner-active-card" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+            <div class="flex items-start justify-between">
+              <div>
+                <span id="ner-active-badge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded border bg-blue-500/10 text-blue-400 border-blue-500/20">Condition</span>
+                <h3 id="ner-active-title" class="text-lg font-bold text-white mt-1">Chronic Kidney Disease</h3>
+              </div>
+              <div class="text-right">
+                <span id="ner-active-cui" class="text-xs font-mono font-bold text-purple-400 bg-purple-950/40 border border-purple-500/20 px-2 py-0.5 rounded">CUI: C0022661</span>
+                <div id="ner-active-trials" class="text-[11px] text-slate-400 mt-1">Found in 7 landmark trials</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section A: Entity Co-occurrence Graph Connections -->
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-network-wired text-cyan-400"></i> Entity Co-occurrence Graph Connections (<span id="cooccur-count">0</span>)
+              </h4>
+              <span class="text-[11px] text-slate-500">Shared trial publications</span>
+            </div>
+            <div id="cooccur-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+          <!-- Section B: Source Mentions & Sentences -->
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-quote-left text-emerald-400"></i> Source Mentions & Sentences (<span id="mentions-count">0</span>)
+              </h4>
+              <span class="text-[11px] text-slate-500">Verbatim clinical text</span>
+            </div>
+            <div id="mentions-list" class="space-y-3 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: STRUCTURED PICO GRID ==================== -->
+    <section id="view-pico" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-table-cells text-emerald-400"></i> Structured PICO Evidence Extraction Grid
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Schema-constrained extraction of Population, Intervention, Comparator, and Clinical Outcomes. Ready for systematic review and meta-analysis.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <select id="pico-drug-filter" onchange="loadPicoTable()" class="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none">
+            <option value="">All SGLT2i Drugs</option>
+            <option value="Empagliflozin">Empagliflozin</option>
+            <option value="Dapagliflozin">Dapagliflozin</option>
+            <option value="Canagliflozin">Canagliflozin</option>
+            <option value="Ertugliflozin">Ertugliflozin</option>
+          </select>
+          <a href="/api/export/pico.csv" download class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-2 transition shadow-md shadow-emerald-600/20">
+            <i class="fa-solid fa-file-csv"></i>
+            <span>Export Systematic Review (CSV)</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 10-Column Evidence Matrix (Slide 07) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-950 text-slate-400 uppercase font-bold border-b border-slate-800 whitespace-nowrap">
+              <tr>
+                <th class="p-3.5">STUDY / PMID</th>
+                <th class="p-3.5">DESIGN</th>
+                <th class="p-3.5">SAMPLE (N)</th>
+                <th class="p-3.5">INTERVENTION</th>
+                <th class="p-3.5">COMPARATOR</th>
+                <th class="p-3.5">OUTCOME</th>
+                <th class="p-3.5">EFFECT SIZE & CI</th>
+                <th class="p-3.5">P-VALUE</th>
+                <th class="p-3.5">DIRECTION</th>
+                <th class="p-3.5 text-center">EVIDENCE SENTENCE</th>
+              </tr>
+            </thead>
+            <tbody id="pico-table-tbody" class="divide-y divide-slate-800 bg-slate-900/40">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: INTERACTIVE KNOWLEDGE GRAPH ==================== -->
+    <section id="view-graph" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-diagram-project text-cyan-400"></i> Interactive Knowledge Graph (KG Explorer)
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">
+            Dynamic force-directed graph illustrating multi-hop clinical relations across Articles, Interventions, Classes, Populations, Outcomes, and Section Chunks.
+          </p>
+        </div>
+
+        <!-- Controls matching Slide 08 & 09 -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- View Mode Toggle -->
+          <div class="bg-slate-800 p-0.5 rounded-xl border border-slate-700 flex">
+            <button onclick="setGraphColorMode('entity')" id="btn-mode-entity" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">
+              Entity Type
+            </button>
+            <button onclick="setGraphColorMode('community')" id="btn-mode-community" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">
+              Community Clusters
+            </button>
+          </div>
+
+          <!-- Hide/Show Chunks Toggle -->
+          <button onclick="toggleChunksVisibility()" id="btn-toggle-chunks" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-eye-slash text-xs"></i>
+            <span id="label-toggle-chunks">Hide Chunks</span>
+          </button>
+
+          <!-- Freeze/Stabilize Layout -->
+          <button onclick="toggleGraphPhysics()" id="btn-toggle-physics" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-snowflake text-xs"></i>
+            <span id="label-toggle-physics">Freeze Layout</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Graph Filter Checkboxes / Legend (Slide 08 & 09) -->
+      <div class="flex flex-wrap items-center gap-4 bg-slate-900/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs">
+        <span class="text-slate-400 font-bold uppercase text-[11px]">Filter Nodes:</span>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" checked onchange="filterGraphGroup('DrugClass', this.checked)" class="rounded bg-slate-800 border-slate-700 text-purple-600 focus:ring-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]"></span>
+          <span>Drug Class</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" checked onchange="filterGraphGroup('Drug', this.checked)" class="rounded bg-slate-800 border-slate-700 text-emerald-600 focus:ring-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
+          <span>Drug Entity</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" checked onchange="filterGraphGroup('Article', this.checked)" class="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#0284C7]"></span>
+          <span>Article Node</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" checked onchange="filterGraphGroup('Condition', this.checked)" class="rounded bg-slate-800 border-slate-700 text-red-600 focus:ring-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#EF4444]"></span>
+          <span>Condition</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" checked onchange="filterGraphGroup('Population', this.checked)" class="rounded bg-slate-800 border-slate-700 text-amber-600 focus:ring-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></span>
+          <span>Population</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" checked onchange="filterGraphGroup('Outcome', this.checked)" class="rounded bg-slate-800 border-slate-700 text-cyan-600 focus:ring-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#38BDF8]"></span>
+          <span>Clinical Outcome</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" checked id="checkbox-filter-chunks" onchange="filterGraphGroup('Chunk', this.checked)" class="rounded bg-slate-800 border-slate-700 text-slate-500 focus:ring-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#64748B]"></span>
+          <span>Section Chunks</span>
+        </label>
+      </div>
+
+      <!-- Vis-Network Container -->
+      <div class="rounded-2xl overflow-hidden shadow-2xl relative border border-slate-800">
+        <div id="network-container"></div>
+        <div id="graph-node-details" class="absolute bottom-4 left-4 bg-slate-900/95 border border-slate-700/80 p-4 rounded-xl max-w-sm text-xs backdrop-blur shadow-xl hidden z-20">
+          <!-- Populated on node click -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- VERBATIM PROVENANCE QUOTE MODAL -->
+  <div id="quote-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <i class="fa-solid fa-quote-left text-xs"></i>
+          </div>
+          <h3 class="text-sm font-bold text-white">Verbatim Source Provenance</h3>
+        </div>
+        <button onclick="closeQuoteModal()" class="text-slate-400 hover:text-white text-sm p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span id="modal-article-title" class="font-semibold text-blue-400">EMPA-KIDNEY (PMID: 36331190)</span>
+          <span id="modal-journal-year" class="text-slate-500">NEJM 2023</span>
+        </div>
+        <p id="modal-quote-text" class="text-emerald-300 font-mono text-xs leading-relaxed bg-emerald-950/20 p-3 rounded-lg border border-emerald-500/20">
+          "Progression of kidney disease or death from cardiovascular causes occurred in 432 of 3304 patients (13.1%) in the empagliflozin group and in 558 of 3305 patients (16.9%) in the placebo group (hazard ratio, 0.72; 95% confidence interval [CI], 0.64 to 0.82; P<0.001)."
+        </p>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 text-xs">
+        <span class="text-slate-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check text-emerald-400"></i> String containment verified against full publication text
+        </span>
+        <a id="modal-pubmed-link" href="#" target="_blank" class="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1">
+          <span>View on PubMed</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUERY & DOCUMENT INGESTION AUDIT HISTORY MODAL -->
+  <div id="history-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
+            <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              Query & Ingestion Audit Log
+              <span class="text-xs px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">Persistent Traceability</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Full historical audit record of natural language queries, retrieved trial documents, and ingestion events.</p>
+          </div>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- History Tabs -->
+      <div class="px-5 border-b border-slate-800 bg-slate-900 flex space-x-2 py-2.5">
+        <button onclick="switchHistoryTab('queries')" id="hist-tab-queries" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition flex items-center gap-1.5">
+          <i class="fa-solid fa-comments text-[11px]"></i>
+          <span>User Queries & Documents (<span id="history-queries-count">0</span>)</span>
+        </button>
+        <button onclick="switchHistoryTab('ingestions')" id="hist-tab-ingestions" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-cloud-arrow-down text-[11px]"></i>
+          <span>Document Ingestion Log (<span id="history-ingest-count">0</span>)</span>
+        </button>
+      </div>
+
+      <!-- History Content Area -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-slate-950/40">
+        
+        <!-- Tab 1: User Queries Log -->
+        <div id="hist-view-queries" class="space-y-3">
+          <div id="history-queries-list" class="space-y-3">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Tab 2: Document Ingestion Log -->
+        <div id="hist-view-ingestions" class="hidden space-y-3">
+          <div id="history-ingest-list" class="space-y-3">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 font-mono flex items-center gap-1.5">
+          <i class="fa-solid fa-database text-slate-600"></i> Persisted to data/audit_history.json
+        </span>
+        <div class="flex items-center gap-2">
+          <button onclick="clearAuditHistory()" class="px-3 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 transition flex items-center gap-1">
+            <i class="fa-solid fa-trash-can text-[10px]"></i> Clear History
+          </button>
+          <button onclick="closeHistoryModal()" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-medium">
+            Close
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

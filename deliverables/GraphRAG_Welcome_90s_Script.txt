@@ -1,0 +1,20 @@
+00.0-10.0s
+Welcome to the Graph RAG Literature Platform. We’re aiming for answers in seconds, instead of weeks of review. Let’s compare SGLT2 studies in kidney disease.
+
+10.0-22.0s
+Search PubMed and click Ingest. Gemini extracts PICO: population, intervention, comparator, outcome, and entities. MeSH and UMLS merge synonyms. Three papers become seven.
+
+22.0-32.0s
+One graph connects studies, drugs, conditions, and outcomes. Explore normalized concepts. One extraction powers chat, the entity explorer, and PICO.
+
+32.0-50.0s
+Ask: compare SGLT2 studies. Gemini routes across graph traversal, aggregation, vector search, and community summaries, then synthesizes retrieved evidence. Graph retrieval targets every study linked to matching concepts, addressing the completeness gaps of a small vector-search sample.
+
+50.0-62.0s
+Compare trials side by side, including effect sizes and confidence intervals. Here, P equals point two one. That’s not statistically significant. Keep the result visible, and export the evidence.
+
+62.0-78.0s
+Every claim links to a verbatim source sentence. The system aims to eliminate hallucinated extractions by rejecting fields whose quote is absent from the paper. Experts open the original source and verify the evidence before using an answer.
+
+78.0-90.0s
+For R and D, medical affairs, and regulatory teams, we’re aiming for weeks of review in minutes. Complete connected evidence, with traceable answers. Graph RAG Literature Platform: evidence you can trust.

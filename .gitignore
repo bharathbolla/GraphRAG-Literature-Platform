@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing and environments
+.pytest_cache/
+.env
+venv/
+env/
+*.log
+
+# Video / audio build artifacts and raw intermediate clips
+video_build/
+audio_90s/
+audio_scenes/
+*.wav
+*.mp3
+
+# OS and Office generated temporary files
+.DS_Store
+Thumbs.db
+~$*

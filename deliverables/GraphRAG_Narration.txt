@@ -1,0 +1,29 @@
+00.0–03.5s
+Explore the Graph RAG literature platform.
+
+03.5–11.5s
+First, search PubMed and ingest papers. The pipeline extracts entities and PICO fields, then links normalized concepts.
+
+11.5–19.5s
+Ask a question in Chat. Hybrid retrieval combines graph connections with relevant passages to generate a cited synthesis.
+
+19.5–24.5s
+Open NER Explorer to inspect biomedical concepts and connections across studies.
+
+24.5–32.5s
+In the PICO grid, compare populations, interventions, comparators, and outcomes. Review effect sizes and export evidence.
+
+32.5–39.5s
+The knowledge graph connects studies, drugs, and outcomes. Explore these relationships across the expanded corpus.
+
+39.5–46.5s
+Filter by condition, drug, or outcome. Concept identifiers link different terms for the same concept.
+
+46.5–50.0s
+Finally, compare studies in Chat.
+
+50.0–54.5s
+Review the evidence table for structured results.
+
+54.5–60.0s
+Open Citations to trace findings to source sentences.

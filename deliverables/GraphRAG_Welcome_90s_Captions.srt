@@ -1,0 +1,99 @@
+1
+00:00:00,000 --> 00:00:02,687
+Welcome to the Graph RAG Literature Platform.
+
+2
+00:00:02,687 --> 00:00:06,908
+We’re aiming for answers in seconds, instead of weeks of review.
+
+3
+00:00:06,908 --> 00:00:10,000
+Let’s compare SGLT2 studies in kidney disease.
+
+4
+00:00:10,000 --> 00:00:12,529
+Search PubMed and click Ingest.
+
+5
+00:00:12,529 --> 00:00:17,080
+Gemini extracts PICO: population, intervention, comparator, outcome, and entities.
+
+6
+00:00:17,080 --> 00:00:19,609
+MeSH and UMLS merge synonyms.
+
+7
+00:00:19,609 --> 00:00:22,000
+Three papers become seven.
+
+8
+00:00:22,000 --> 00:00:25,843
+One graph connects studies, drugs, conditions, and outcomes.
+
+9
+00:00:25,843 --> 00:00:27,284
+Explore normalized concepts.
+
+10
+00:00:27,284 --> 00:00:32,000
+One extraction powers chat, the entity explorer, and PICO.
+
+11
+00:00:32,000 --> 00:00:33,894
+Ask: compare SGLT2 studies.
+
+12
+00:00:33,894 --> 00:00:39,103
+Gemini routes across graph traversal, aggregation, vector search, and community summaries,
+
+13
+00:00:39,103 --> 00:00:40,997
+then synthesizes retrieved evidence.
+
+14
+00:00:40,997 --> 00:00:45,258
+Graph retrieval targets every study linked to matching concepts,
+
+15
+00:00:45,258 --> 00:00:50,000
+addressing the completeness gaps of a small vector-search sample.
+
+16
+00:00:50,000 --> 00:00:54,400
+Compare trials side by side, including effect sizes and confidence intervals.
+
+17
+00:00:54,400 --> 00:00:56,800
+Here, P equals point two one.
+
+18
+00:00:56,800 --> 00:00:58,400
+That’s not statistically significant.
+
+19
+00:00:58,400 --> 00:01:02,000
+Keep the result visible, and export the evidence.
+
+20
+00:01:02,000 --> 00:01:05,105
+Every claim links to a verbatim source sentence.
+
+21
+00:01:05,105 --> 00:01:11,702
+The system aims to eliminate hallucinated extractions by rejecting fields whose quote is absent from the paper.
+
+22
+00:01:11,702 --> 00:01:18,000
+Experts open the original source and verify the evidence before using an answer.
+
+23
+00:01:18,000 --> 00:01:24,358
+For R and D, medical affairs, and regulatory teams, we’re aiming for weeks of review in minutes.
+
+24
+00:01:24,358 --> 00:01:26,602
+Complete connected evidence, with traceable answers.
+
+25
+00:01:26,602 --> 00:01:30,000
+Graph RAG Literature Platform: evidence you can trust.

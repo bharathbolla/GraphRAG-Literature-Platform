@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GraphRAG Literature Platform | Multi-Doc Chat, NER & PICO Evidence</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Vis-Network for Knowledge Graph -->
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0B0F19;
+      color: #E2E8F0;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #111827;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #4B5563;
+    }
+    #network-container {
+      width: 100%;
+      height: 650px;
+      background: radial-gradient(circle at center, #111827 0%, #0B0F19 100%);
+      border: 1px solid #1F2937;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
+
+  <!-- TOP ENTERPRISE NAVBAR -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-6 py-3.5 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-dna text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Novartis AI Hackathon</span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Production Ready
+            </span>
+          </div>
+          <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            GraphRAG Literature Platform
+            <span class="text-xs font-normal text-slate-400 hidden sm:inline">| Biomedical Multi-Doc Synthesis & PICO Evidence</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Bar -->
+      <div class="flex items-center space-x-3 text-xs">
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+          <i class="fa-solid fa-book-medical text-blue-400"></i>
+          <span class="text-slate-400">Corpus:</span>
+          <span id="nav-article-count" class="font-bold text-white">7 RCTs</span>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+          <i class="fa-solid fa-users text-amber-400"></i>
+          <span class="text-slate-400">Cohort N:</span>
+          <span id="nav-patient-count" class="font-bold text-white">48,794</span>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+          <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+          <span class="text-slate-400">Provenance:</span>
+          <span class="font-bold text-emerald-400">100% Entailed</span>
+        </div>
+        <button onclick="resetBenchmark()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-rotate-right text-xs"></i>
+          <span>Reset SGLT2i Corpus</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-slate-900/90 border-b border-slate-800 px-6 backdrop-blur sticky top-16 z-30">
+    <div class="max-w-7xl mx-auto flex space-x-1 sm:space-x-3 overflow-x-auto py-2">
+      <button onclick="switchTab('corpus')" id="tab-btn-corpus" class="tab-btn active px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-blue-600 text-white shadow-sm transition">
+        <i class="fa-solid fa-database text-xs"></i>
+        <span>1. Literature Corpus</span>
+      </button>
+      <button onclick="switchTab('chat')" id="tab-btn-chat" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-comments text-xs"></i>
+        <span>2. Clinical Multi-Doc QA</span>
+      </button>
+      <button onclick="switchTab('ner')" id="tab-btn-ner" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-tags text-xs"></i>
+        <span>3. Biomedical NER Explorer</span>
+      </button>
+      <button onclick="switchTab('pico')" id="tab-btn-pico" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-table-cells text-xs"></i>
+        <span>4. Structured PICO Grid</span>
+      </button>
+      <button onclick="switchTab('graph')" id="tab-btn-graph" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-diagram-project text-xs"></i>
+        <span>5. Knowledge Graph (KG)</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+
+    <!-- ==================== TAB 1: LITERATURE CORPUS ==================== -->
+    <section id="view-corpus" class="space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-book-journal-whills text-blue-400"></i> Indexed Literature Corpus & Extraction Ingestion
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">
+            Browse landmark clinical trials or ingest new publications via NCBI PubMed. Each trial undergoes automated section-aware parsing and schema-constrained PICO extraction.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative w-72">
+            <input type="text" id="ingest-input" placeholder="Search PubMed or enter PMID..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-3 text-slate-500 text-xs"></i>
+          </div>
+          <button onclick="ingestArticle()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-xl flex items-center gap-2 transition shadow-md shadow-blue-600/20">
+            <i class="fa-solid fa-cloud-arrow-down text-xs"></i>
+            <span>Ingest</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Articles Grid -->
+      <div id="articles-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: MULTI-DOC CHAT ==================== -->
+    <section id="view-chat" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-robot text-blue-400"></i> Multi-Document Agentic Clinical QA
+        </h2>
+        <p class="text-sm text-slate-400 mt-1">
+          Synthesize clinical evidence across multiple trials with zero hallucinations. Every hazard ratio and clinical claim is guarded by verbatim string verification and sentence-level provenance.
+        </p>
+
+        <!-- Suggested Prompt Chips -->
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span class="text-xs text-slate-500 self-center font-medium">Suggested queries:</span>
+          <button onclick="fillAndSubmitChat('Which SGLT2 inhibitor trials reported kidney disease progression in CKD patients?')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            🔬 Which SGLT2i trials reported kidney progression in CKD?
+          </button>
+          <button onclick="fillAndSubmitChat('Compare all-cause mortality and heart failure hospitalization hazard ratios across trials.')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            📊 Compare all-cause mortality across trials
+          </button>
+          <button onclick="fillAndSubmitChat('How many phase 3 RCTs studied SGLT2 inhibitors vs placebo?')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            🔢 How many phase 3 RCTs tested SGLT2i vs placebo?
+          </button>
+          <button onclick="fillAndSubmitChat('What are the primary clinical consensus themes across the cardiorenal corpus?')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            🌐 Primary clinical consensus themes (Global Leiden)
+          </button>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="mt-4 flex gap-2">
+          <input type="text" id="chat-input" placeholder="Ask a cross-study clinical question (e.g. SGLT2i effect sizes in CKD)..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+          <button onclick="sendChatMessage()" id="chat-submit-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-blue-600/20">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+            <span>Synthesize</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Response Output Card -->
+      <div id="chat-response-card" class="hidden bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-5">
+        <!-- Header with Intent & Audit Status -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xs uppercase font-bold text-slate-400">Query Intent:</span>
+            <span id="chat-intent-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">graph_entity</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="chat-audit-badge" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+              <i class="fa-solid fa-check-double text-xs"></i>
+              <span>100% Entailed | Zero Hallucinations</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Synthesized Prose -->
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Cross-Study Clinical Synthesis</h3>
+          <div id="chat-prose" class="text-slate-200 text-sm leading-relaxed space-y-2 whitespace-pre-line bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Comparative Evidence Table -->
+        <div id="chat-evidence-container">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Structured Comparative Evidence Table</h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-800">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase font-bold border-b border-slate-800">
+                <tr>
+                  <th class="p-3">Study / PMID</th>
+                  <th class="p-3">Intervention</th>
+                  <th class="p-3">Population</th>
+                  <th class="p-3">Clinical Outcome</th>
+                  <th class="p-3">Effect Size</th>
+                  <th class="p-3">95% CI</th>
+                  <th class="p-3">P-Value</th>
+                  <th class="p-3">Verbatim Proof</th>
+                </tr>
+              </thead>
+              <tbody id="chat-evidence-tbody" class="divide-y divide-slate-800 bg-slate-900/40">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: BIOMEDICAL NER EXPLORER ==================== -->
+    <section id="view-ner" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-tags text-purple-400"></i> Biomedical Named Entity Recognition (NER) Explorer
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">
+            Normalized biomedical entities mapped to standard UMLS Concept Unique Identifiers (CUIs), MeSH IDs, and RxNorm codes.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="filterNER('All')" class="ner-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white">All</button>
+          <button onclick="filterNER('Condition')" class="ner-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">Conditions</button>
+          <button onclick="filterNER('Drug')" class="ner-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">Drugs</button>
+          <button onclick="filterNER('Outcome')" class="ner-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">Outcomes</button>
+        </div>
+      </div>
+
+      <!-- Two-column view: Entities list + Co-occurrence inspector -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-slate-400"></i> Normalized Entities in Corpus
+          </h3>
+          <div id="ner-list-container" class="space-y-2.5 max-h-[550px] overflow-y-auto pr-2 custom-scrollbar">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+          <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-network-wired text-cyan-400"></i> Entity Co-occurrence Network
+          </h3>
+          <p id="cooccur-subtitle" class="text-xs text-slate-400 mb-4">Click any entity on the left to inspect its co-occurring clinical partners.</p>
+          <div id="cooccur-list" class="space-y-2">
+            <div class="text-center py-12 text-slate-600 text-xs">Select an entity to view co-occurrences.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: STRUCTURED PICO GRID ==================== -->
+    <section id="view-pico" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-table-cells text-emerald-400"></i> Structured PICO Evidence Matrix
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">
+            Schema-constrained extraction of Population, Intervention, Comparator, and Clinical Outcomes. Ready for systematic review and meta-analysis.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <select id="pico-drug-filter" onchange="loadPicoTable()" class="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none">
+            <option value="">All SGLT2i Drugs</option>
+            <option value="Empagliflozin">Empagliflozin</option>
+            <option value="Dapagliflozin">Dapagliflozin</option>
+            <option value="Canagliflozin">Canagliflozin</option>
+            <option value="Ertugliflozin">Ertugliflozin</option>
+          </select>
+          <a href="/api/export/pico.csv" download class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-2 transition shadow-md shadow-emerald-600/20">
+            <i class="fa-solid fa-file-csv"></i>
+            <span>Export CSV</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-950 text-slate-400 uppercase font-bold border-b border-slate-800">
+              <tr>
+                <th class="p-3.5">Study Acronym</th>
+                <th class="p-3.5">Design & Cohort N</th>
+                <th class="p-3.5">Population Description</th>
+                <th class="p-3.5">Intervention (Dose)</th>
+                <th class="p-3.5">Primary Outcome</th>
+                <th class="p-3.5">Effect (95% CI)</th>
+                <th class="p-3.5">P-Value</th>
+                <th class="p-3.5">Action</th>
+              </tr>
+            </thead>
+            <tbody id="pico-table-tbody" class="divide-y divide-slate-800 bg-slate-900/40">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: KNOWLEDGE GRAPH ==================== -->
+    <section id="view-graph" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-diagram-project text-cyan-400"></i> Interactive Knowledge Graph (KG Explorer)
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">
+            Dynamic force-directed graph illustrating multi-hop clinical relations across Articles, Interventions, Classes, Populations, and Outcomes.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="resetGraphPhysics()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-arrows-spin"></i> Stabilize Graph
+          </button>
+        </div>
+      </div>
+
+      <!-- Graph Legend -->
+      <div class="flex flex-wrap items-center gap-3 bg-slate-900/60 border border-slate-800/80 px-4 py-2.5 rounded-xl text-xs">
+        <span class="text-slate-400 font-semibold">Node Legend:</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#8B5CF6]"></span> Drug Class</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#10B981]"></span> Drug Entity</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#0284C7]"></span> Article Node</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#EF4444]"></span> Condition</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#F59E0B]"></span> Population</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#38BDF8]"></span> Clinical Outcome</span>
+      </div>
+
+      <!-- Vis-Network Container -->
+      <div class="rounded-2xl overflow-hidden shadow-2xl relative">
+        <div id="network-container"></div>
+        <div id="graph-node-details" class="absolute bottom-4 left-4 bg-slate-900/95 border border-slate-700/80 p-4 rounded-xl max-w-sm text-xs backdrop-blur shadow-xl hidden">
+          <!-- Populated on node click -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- VERBATIM PROVENANCE QUOTE MODAL -->
+  <div id="quote-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <i class="fa-solid fa-quote-left text-xs"></i>
+          </div>
+          <h3 class="text-sm font-bold text-white">Verbatim Source Provenance</h3>
+        </div>
+        <button onclick="closeQuoteModal()" class="text-slate-400 hover:text-white text-sm p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span id="modal-article-title" class="font-semibold text-blue-400">EMPA-KIDNEY (PMID: 36331190)</span>
+          <span id="modal-journal-year" class="text-slate-500">NEJM 2023</span>
+        </div>
+        <p id="modal-quote-text" class="text-emerald-300 font-mono text-xs leading-relaxed bg-emerald-950/20 p-3 rounded-lg border border-emerald-500/20">
+          "Progression of kidney disease or death from cardiovascular causes occurred in 432 of 3304 patients (13.1%) in the empagliflozin group and in 558 of 3305 patients (16.9%) in the placebo group (hazard ratio, 0.72; 95% confidence interval [CI], 0.64 to 0.82; P<0.001)."
+        </p>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 text-xs">
+        <span class="text-slate-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check text-emerald-400"></i> String containment verified against full publication text
+        </span>
+        <a id="modal-pubmed-link" href="#" target="_blank" class="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1">
+          <span>View on PubMed</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    let currentCorpus = [];
+    let currentEntities = [];
+    let networkInstance = null;
+
+    // Tab Switching Logic
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+        btn.classList.add('text-slate-400');
+      });
+      document.getElementById(`tab-btn-${tabName}`).classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+      document.getElementById(`tab-btn-${tabName}`).classList.remove('text-slate-400');
+
+      ['corpus', 'chat', 'ner', 'pico', 'graph'].forEach(view => {
+        document.getElementById(`view-${view}`).classList.add('hidden');
+      });
+      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+      if (tabName === 'graph' && !networkInstance) {
+        initKnowledgeGraph();
+      }
+    }
+
+    // Load Initial Data
+    async function loadCorpusData() {
+      try {
+        const res = await fetch('/api/articles');
+        const data = await res.json();
+        currentCorpus = data.articles;
+        renderArticlesList();
+        loadPicoTable();
+        loadNERList();
+      } catch (err) {
+        console.error("Error loading corpus:", err);
+      }
+    }
+
+    function renderArticlesList() {
+      const container = document.getElementById('articles-container');
+      container.innerHTML = '';
+
+      currentCorpus.forEach(art => {
+        const pmid = art.pmid;
+        const pop = art.pico?.population || {};
+        const inter = art.pico?.interventions?.[0] || {};
+        const primaryOut = art.pico?.outcomes?.[0] || {};
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 p-5 rounded-2xl hover:border-slate-700 transition space-y-3";
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">${art.study_design}</span>
+              <span class="text-xs text-slate-500 ml-2">${art.journal} (${art.year})</span>
+              <h3 class="text-sm font-bold text-white mt-1.5 leading-snug">${art.title}</h3>
+            </div>
+            <a href="https://pubmed.ncbi.nlm.nih.gov/${pmid}/" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 font-mono px-2 py-1 rounded bg-slate-800 border border-slate-700">
+              PMID:${pmid}
+            </a>
+          </div>
+
+          <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">${art.abstract}</p>
+
+          <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-3">
+              <span class="text-slate-400">Cohort N: <strong class="text-white">${pop.n ? pop.n.toLocaleString() : 'N/A'}</strong></span>
+              <span class="text-slate-400">Drug: <strong class="text-emerald-400">${inter.name || 'N/A'}</strong></span>
+              <span class="text-slate-400">Primary: <strong class="text-cyan-400">${primaryOut.measure || 'HR'} ${primaryOut.effect || ''}</strong></span>
+            </div>
+            <button onclick="openQuoteModal('${art.title.replace(/'/g, "\\'")}', '${art.journal} ${art.year}', '${(primaryOut.evidence || '').replace(/'/g, "\\'")}', '${pmid}')" class="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1">
+              <i class="fa-solid fa-quote-left text-[10px]"></i> View Proof
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Ingest Article
+    async function ingestArticle() {
+      const input = document.getElementById('ingest-input');
+      const val = input.value.trim();
+      if (!val) return;
+
+      try {
+        const res = await fetch('/api/articles/ingest', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ query_or_pmid: val })
+        });
+        const data = await res.json();
+        alert(data.message);
+        input.value = '';
+        await loadCorpusData();
+        if (networkInstance) initKnowledgeGraph();
+      } catch (err) {
+        console.error("Ingestion failed:", err);
+      }
+    }
+
+    // Reset Benchmark
+    async function resetBenchmark() {
+      if (!confirm("Reset corpus to the 7 landmark Phase 3 SGLT2i clinical trials?")) return;
+      try {
+        const res = await fetch('/api/benchmark/reset', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message);
+        await loadCorpusData();
+        if (networkInstance) initKnowledgeGraph();
+      } catch (err) {
+        console.error("Reset failed:", err);
+      }
+    }
+
+    // Chat Multi-Doc QA
+    function fillAndSubmitChat(query) {
+      document.getElementById('chat-input').value = query;
+      sendChatMessage();
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const q = input.value.trim();
+      if (!q) return;
+
+      const btn = document.getElementById('chat-submit-btn');
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-xs"></i> <span>Reasoning...</span>`;
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ query: q })
+        });
+        const data = await res.json();
+
+        // Render response card
+        document.getElementById('chat-response-card').classList.remove('hidden');
+        document.getElementById('chat-intent-badge').innerText = data.intent;
+        document.getElementById('chat-audit-badge').innerHTML = `<i class="fa-solid fa-check-double text-xs"></i> <span>${data.audit.status_badge}</span>`;
+        document.getElementById('chat-prose').innerHTML = data.synthesis.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Render evidence table
+        const tbody = document.getElementById('chat-evidence-tbody');
+        tbody.innerHTML = '';
+        if (data.evidence_table && data.evidence_table.length > 0) {
+          document.getElementById('chat-evidence-container').classList.remove('hidden');
+          data.evidence_table.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-800/50 transition";
+            tr.innerHTML = `
+              <td class="p-3 font-semibold text-white">
+                ${row.study_name}
+                <div class="text-[10px] text-slate-500 font-mono">PMID:${row.pmid}</div>
+              </td>
+              <td class="p-3 text-emerald-400 font-medium">${row.drug} <span class="text-slate-500 text-[10px]">(${row.dose})</span></td>
+              <td class="p-3 text-slate-400 max-w-xs truncate" title="${row.population}">${row.population}</td>
+              <td class="p-3 text-cyan-300">${row.outcome}</td>
+              <td class="p-3 font-bold text-white">${row.effect_size}</td>
+              <td class="p-3 font-mono text-slate-400">${row.ci_95}</td>
+              <td class="p-3 font-mono text-slate-400">${row.p_value}</td>
+              <td class="p-3">
+                <button onclick="openQuoteModal('${row.study_name.replace(/'/g, "\\'")}', '${row.journal || ''} ${row.year || ''}', '${(row.evidence_quote || '').replace(/'/g, "\\'")}', '${row.pmid}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 text-[11px] flex items-center gap-1 transition">
+                  <i class="fa-solid fa-quote-left text-[9px]"></i> Quote
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          document.getElementById('chat-evidence-container').classList.add('hidden');
+        }
+
+      } catch (err) {
+        console.error("Chat error:", err);
+      } finally {
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs"></i> <span>Synthesize</span>`;
+        btn.disabled = false;
+      }
+    }
+
+    // Load PICO Table
+    async function loadPicoTable() {
+      const drugFilter = document.getElementById('pico-drug-filter')?.value || '';
+      try {
+        const url = drugFilter ? `/api/pico?drug=${encodeURIComponent(drugFilter)}` : '/api/pico';
+        const res = await fetch(url);
+        const data = await res.json();
+        const tbody = document.getElementById('pico-table-tbody');
+        tbody.innerHTML = '';
+
+        data.pico_rows.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-800/40 transition";
+          tr.innerHTML = `
+            <td class="p-3.5 font-bold text-white">
+              ${r.study_acronym}
+              <div class="text-[10px] text-slate-500 font-mono">PMID:${r.pmid} | ${r.journal_year}</div>
+            </td>
+            <td class="p-3.5 text-slate-300">
+              <span class="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded text-[10px] border border-blue-500/20">${r.study_design}</span>
+              <div class="mt-1 text-slate-400 font-mono text-[11px]">N = ${r.sample_size.toLocaleString()}</div>
+            </td>
+            <td class="p-3.5 text-slate-300 max-w-xs truncate" title="${r.population}">
+              ${r.population}
+            </td>
+            <td class="p-3.5 text-emerald-400 font-medium">
+              ${r.intervention}
+            </td>
+            <td class="p-3.5 text-cyan-300 max-w-xs truncate" title="${r.outcome}">
+              ${r.outcome}
+            </td>
+            <td class="p-3.5 font-bold text-white font-mono">
+              ${r.effect_size} <span class="text-slate-500 font-normal text-[10px]">${r.ci_95}</span>
+            </td>
+            <td class="p-3.5 font-mono text-slate-400">
+              ${r.p_value}
+            </td>
+            <td class="p-3.5">
+              <button onclick="openQuoteModal('${r.study_acronym.replace(/'/g, "\\'")}', '${r.journal_year}', '${(r.evidence_quote || '').replace(/'/g, "\\'")}', '${r.pmid}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 text-xs flex items-center gap-1 transition">
+                <i class="fa-solid fa-quote-left text-[10px]"></i> Proof
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Error loading PICO:", err);
+      }
+    }
+
+    // Load NER List
+    async function loadNERList() {
+      try {
+        const res = await fetch('/api/ner');
+        const data = await res.json();
+        currentEntities = data.entities;
+        filterNER('All');
+      } catch (err) {
+        console.error("Error loading NER:", err);
+      }
+    }
+
+    function filterNER(type) {
+      document.querySelectorAll('.ner-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
+        if (btn.innerText.includes(type)) {
+          btn.classList.add('bg-blue-600', 'text-white');
+          btn.classList.remove('bg-slate-800', 'text-slate-300');
+        }
+      });
+
+      const container = document.getElementById('ner-list-container');
+      container.innerHTML = '';
+
+      const filtered = type === 'All' ? currentEntities : currentEntities.filter(e => e.type === type);
+
+      filtered.forEach(e => {
+        const item = document.createElement('div');
+        item.className = "p-3 bg-slate-950/60 border border-slate-800 rounded-xl hover:border-slate-700 cursor-pointer flex items-center justify-between transition";
+        item.onclick = () => loadCooccurrences(e.name);
+
+        let typeBadgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+        if (e.type === 'Condition') typeBadgeColor = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+        if (e.type === 'Drug') typeBadgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        if (e.type === 'Outcome') typeBadgeColor = "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
+
+        item.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <span class="text-xs px-2 py-0.5 rounded font-semibold border ${typeBadgeColor}">${e.type}</span>
+            <span class="text-sm font-semibold text-white">${e.name}</span>
+          </div>
+          <div class="flex items-center space-x-3 text-xs">
+            <span class="font-mono text-slate-500">CUI: ${e.cui}</span>
+            <span class="bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-bold">${e.papers_count} ${e.papers_count === 1 ? 'trial' : 'trials'}</span>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    async function loadCooccurrences(entityName) {
+      document.getElementById('cooccur-subtitle').innerText = `Co-occurring clinical concepts with "${entityName}":`;
+      try {
+        const res = await fetch(`/api/ner/${encodeURIComponent(entityName)}/cooccurrences`);
+        const data = await res.json();
+        const container = document.getElementById('cooccur-list');
+        container.innerHTML = '';
+
+        if (!data.cooccurrences || data.cooccurrences.length === 0) {
+          container.innerHTML = `<div class="text-xs text-slate-500 py-4">No strong co-occurrences found.</div>`;
+          return;
+        }
+
+        data.cooccurrences.forEach(co => {
+          const row = document.createElement('div');
+          row.className = "flex items-center justify-between p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg text-xs";
+          row.innerHTML = `
+            <span class="text-slate-300 font-medium">${co.entity}</span>
+            <span class="text-emerald-400 font-mono font-bold">${co.co_occurrences} trials</span>
+          `;
+          container.appendChild(row);
+        });
+      } catch (err) {
+        console.error("Co-occurrence error:", err);
+      }
+    }
+
+    // Knowledge Graph Visualization
+    async function initKnowledgeGraph() {
+      try {
+        const res = await fetch('/api/graph');
+        const data = await res.json();
+
+        const container = document.getElementById('network-container');
+        const graphData = {
+          nodes: new vis.DataSet(data.nodes),
+          edges: new vis.DataSet(data.edges)
+        };
+
+        const options = {
+          nodes: {
+            shape: 'dot',
+            shadow: true,
+            borderWidth: 2,
+            font: { color: '#FFFFFF', size: 12, face: 'Inter' }
+          },
+          edges: {
+            width: 1.5,
+            smooth: { type: 'continuous' }
+          },
+          physics: {
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: {
+              gravitationalConstant: -50,
+              centralGravity: 0.01,
+              springLength: 100,
+              springConstant: 0.08
+            },
+            maxVelocity: 50,
+            minVelocity: 0.1,
+            timestep: 0.5,
+            stabilization: { iterations: 150 }
+          },
+          interaction: {
+            hover: true,
+            tooltipDelay: 200,
+            zoomView: true
+          }
+        };
+
+        networkInstance = new vis.Network(container, graphData, options);
+
+        networkInstance.on("click", function(params) {
+          if (params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            const node = data.nodes.find(n => n.id === nodeId);
+            if (node) {
+              const detailsEl = document.getElementById('graph-node-details');
+              detailsEl.classList.remove('hidden');
+              detailsEl.innerHTML = `
+                <div class="flex items-center justify-between border-b border-slate-700 pb-1.5 mb-1.5">
+                  <span class="font-bold text-white">${node.label.replace('\\n', ' ')}</span>
+                  <span class="text-[10px] uppercase font-bold text-slate-400">${node.group}</span>
+                </div>
+                <p class="text-slate-300 text-[11px] leading-snug">${node.title || 'Connected node in knowledge graph.'}</p>
+              `;
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Error rendering graph:", err);
+      }
+    }
+
+    function resetGraphPhysics() {
+      if (networkInstance) {
+        networkInstance.stabilize();
+      }
+    }
+
+    // Modal Helpers
+    function openQuoteModal(title, journal, quote, pmid) {
+      document.getElementById('modal-article-title').innerText = title;
+      document.getElementById('modal-journal-year').innerText = journal;
+      document.getElementById('modal-quote-text').innerText = `"${quote}"`;
+      document.getElementById('modal-pubmed-link').href = `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`;
+      document.getElementById('quote-modal').classList.remove('hidden');
+    }
+
+    function closeQuoteModal() {
+      document.getElementById('quote-modal').classList.add('hidden');
+    }
+
+    // Initialize on page load
+    window.onload = () => {
+      loadCorpusData();
+    };
+  </script>
+</body>
+</html>

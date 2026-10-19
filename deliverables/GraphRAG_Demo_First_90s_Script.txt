@@ -1,0 +1,41 @@
+00.0-05.0s
+Graph RAG helps pharma teams find, connect, and compare research evidence.
+
+05.0-11.0s
+Start by searching PubMed. Click Ingest to add matching papers.
+
+11.0-18.0s
+Papers increase from three to seven. Section-aware text chunks grow from ten to thirty-two.
+
+18.0-24.0s
+Extract entities and PICO fields. Normalize synonyms to avoid duplicate concept nodes.
+
+24.0-31.0s
+Entities grow from eighteen to thirty-two, edges from thirty-four to eighty-eight, and communities from five to eight.
+
+31.0-36.0s
+The graph view expands from twenty-one to thirty-nine nodes, connecting studies and concepts.
+
+36.0-44.0s
+Hybrid Graph RAG follows study connections, then ranks passages. This supports cross-paper questions beyond similarity search alone.
+
+44.0-49.0s
+Browse normalized concepts in NER, or compare studies in PICO.
+
+49.0-55.0s
+Compare populations, interventions, comparators, and outcomes, then export the evidence.
+
+55.0-60.0s
+Check the evidence table and trace citations to source sentences.
+
+60.0-68.0s
+R and D can investigate targets. Clinical development can compare trials, and medical affairs can prepare cited answers.
+
+68.0-76.0s
+Market access teams can compare outcomes. Safety teams can investigate published findings across studies.
+
+76.0-85.0s
+Regulatory reviewers can trace claims to source passages, helping teams check evidence and identify gaps for further review.
+
+85.0-90.0s
+One shared evidence base, with findings linked to source passages.
