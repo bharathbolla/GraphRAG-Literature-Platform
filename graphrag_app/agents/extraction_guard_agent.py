@@ -12,67 +12,8 @@ class ExtractionGuardAgent:
     Enforces the **Verbatim String Guard (Hallucination Guard)**:
     Every extracted statistic and parameter MUST be an exact substring
     of the underlying source text.
+    100% open-domain: does NOT rely on hardcoded drug or condition lists.
     """
-    # Extended cross-domain biomedical seed list
-    KNOWN_DRUGS = [
-        # Cardiometabolic & Renal
-        ("Sacubitril/Valsartan", "Sacubitril", "C1565489", "1656333"),
-        ("Sacubitril", "Sacubitril", "C1565489", "1656333"),
-        ("LCZ696", "Sacubitril / Valsartan", "C1565489", "1656333"),
-        ("Entresto", "Sacubitril / Valsartan", "C1565489", "1656333"),
-        ("Empagliflozin", "Empagliflozin", "C3261058", "1545653"),
-        ("Dapagliflozin", "Dapagliflozin", "C2719231", "1488564"),
-        ("Canagliflozin", "Canagliflozin", "C2982845", "1373458"),
-        ("Ertugliflozin", "Ertugliflozin", "C3886580", "1992672"),
-        ("Enalapril", "Enalapril", "C0014038", "3827"),
-        ("Finerenone", "Finerenone", "C4082260", "2560325"),
-        ("Semaglutide", "Semaglutide", "C4085420", "1991302"),
-        ("Tirzepatide", "Tirzepatide", "C5544711", "2601736"),
-        # Oncology & Hematology
-        ("Ribociclib", "Ribociclib", "C4052345", "1873983"),
-        ("Kisqali", "Ribociclib", "C4052345", "1873983"),
-        ("Palbociclib", "Palbociclib", "C2987625", "1601380"),
-        ("Abemaciclib", "Abemaciclib", "C4082269", "1946826"),
-        ("Pembrolizumab", "Pembrolizumab", "C3886580", "1547545"),
-        ("Keytruda", "Pembrolizumab", "C3886580", "1547545"),
-        ("Trastuzumab", "Trastuzumab", "C0717358", "228834"),
-        ("Asciminib", "Asciminib", "C5205796", "2584948"),
-        ("Scemblix", "Asciminib", "C5205796", "2584948"),
-        ("Iptacopan", "Iptacopan", "C5441712", "2671239"),
-        ("Fabhalta", "Iptacopan", "C5441712", "2671239"),
-        # Immunology & Dermatology
-        ("Secukinumab", "Secukinumab", "C3273840", "1602493"),
-        ("Cosentyx", "Secukinumab", "C3273840", "1602493"),
-        ("Ixekizumab", "Ixekizumab", "C3539828", "1740467"),
-        ("Guselkumab", "Guselkumab", "C4085441", "1946850"),
-        # Neuroscience
-        ("Ofatumumab", "Ofatumumab", "C2719580", "1114195"),
-        ("Kesimpta", "Ofatumumab", "C2719580", "1114195"),
-        ("Ocrelizumab", "Ocrelizumab", "C1709426", "1876366"),
-        ("Teriflunomide", "Teriflunomide", "C0979508", "1306349"),
-        ("Lecanemab", "Lecanemab", "C5544719", "2626579")
-    ]
-
-    KNOWN_CONDITIONS = [
-        ("Heart Failure", "Heart Failure with Reduced Ejection Fraction", "C0018802"),
-        ("Chronic Kidney Disease", "Chronic Kidney Disease", "C0022661"),
-        ("CKD", "Chronic Kidney Disease", "C0022661"),
-        ("Breast Cancer", "Advanced HR+/HER2- Breast Cancer", "C0006142"),
-        ("Psoriasis", "Moderate-to-Severe Plaque Psoriasis", "C0033860"),
-        ("Multiple Sclerosis", "Relapsing Multiple Sclerosis", "C0026769"),
-        ("Paroxysmal Nocturnal Hemoglobinuria", "Paroxysmal Nocturnal Hemoglobinuria", "C0019088"),
-        ("PNH", "Paroxysmal Nocturnal Hemoglobinuria", "C0019088"),
-        ("Leukemia", "Chronic Myeloid Leukemia", "C0023473"),
-        ("CML", "Chronic Myeloid Leukemia", "C0023473"),
-        ("Prostate Cancer", "mCRPC Prostate Cancer", "C0376358"),
-        ("Diabetes", "Type 2 Diabetes Mellitus", "C0011860"),
-        ("T2DM", "Type 2 Diabetes Mellitus", "C0011860"),
-        ("Obesity", "Obesity & Weight Management", "C0028754"),
-        ("Alzheimer", "Early Alzheimer's Disease", "C0002395"),
-        ("Melanoma", "Advanced Melanoma", "C0025202"),
-        ("Lung Cancer", "Non-Small Cell Lung Cancer", "C0007131")
-    ]
-
     USAN_DRUG_STEMS = [
         "-mab", "-nib", "-gliflozin", "-sartan", "-statin", "-tide", "-ciclib",
         "-parib", "-cept", "-zomib", "-mod", "-coxib", "-prazole", "-lukast"
@@ -158,7 +99,7 @@ class ExtractionGuardAgent:
         source_text = article.abstract
         full_context = f"{article.title} {source_text}".lower()
 
-        # 1. Detect Intervention (Chemicals -> Seed Map -> USAN Stems -> Title Syntax)
+        # 1. Detect Intervention (Chemicals -> Title Linguistic Decomposition -> USAN Stems)
         drug_name = None
         drug_cui = None
         rxnorm = None
@@ -166,19 +107,24 @@ class ExtractionGuardAgent:
         # Priority A: Check PubMed XML chemicals if available
         if getattr(article, "chemicals", None):
             for chem in article.chemicals:
-                if len(chem) > 2 and not any(ign in chem.lower() for ign in ["placebo", "saline", "water"]):
+                if len(chem) > 2 and not any(ign in chem.lower() for ign in ["placebo", "saline", "water", "vehicle"]):
                     drug_name = chem.title()
-                    drug_cui = f"CUI:AUTO:{re.sub(r'[^A-Z0-9]', '_', drug_name.upper())[:16]}"
                     break
 
-        # Priority B: Check KNOWN_DRUGS seed
-        if not drug_name:
-            for kw, d_name, cui, rx in self.KNOWN_DRUGS:
-                if kw.lower() in full_context:
-                    drug_name = d_name
-                    drug_cui = cui
-                    rxnorm = rx
-                    break
+        # Priority B: Title Linguistic Decomposition
+        if not drug_name and article.title:
+            # Pattern: <Drug> [vs <Comparator>] in (patients|adults|individuals|subjects) with <Condition>
+            m_title = re.search(r'^(.*?)\s+(?:in|for)\s+(?:patients|adults|individuals|subjects)\s+with\s+(.*?)(?:\s*\([A-Z0-9\-]+\)|\s*:\s*|\s*--\s*|$)', article.title, re.I)
+            if m_title:
+                raw_d = m_title.group(1).strip()
+                if " versus " in raw_d.lower():
+                    raw_d = re.split(r'\s+versus\s+', raw_d, flags=re.I)[0].strip()
+                elif " vs " in raw_d.lower() or " vs. " in raw_d.lower():
+                    raw_d = re.split(r'\s+vs\.?\s+', raw_d, flags=re.I)[0].strip()
+                if " and " in raw_d.lower():
+                    raw_d = raw_d.split(" and ")[0].strip()
+                if len(raw_d) > 2:
+                    drug_name = raw_d.title()
 
         # Priority C: Check USAN stems in title tokens
         if not drug_name:
@@ -187,7 +133,6 @@ class ExtractionGuardAgent:
                 tw_lower = tw.lower()
                 if any(tw_lower.endswith(stem.lstrip("-")) for stem in self.USAN_DRUG_STEMS):
                     drug_name = tw.capitalize()
-                    drug_cui = f"CUI:AUTO:{re.sub(r'[^A-Z0-9]', '_', drug_name.upper())[:16]}"
                     break
 
         # Priority D: Title syntax e.g. "X versus Y"
@@ -195,44 +140,43 @@ class ExtractionGuardAgent:
             vs_match = re.search(r'\b([A-Z][a-z0-9\-]{2,})\s+(?:versus|vs\.?)\s+', article.title)
             if vs_match:
                 drug_name = vs_match.group(1).capitalize()
-                drug_cui = f"CUI:AUTO:{re.sub(r'[^A-Z0-9]', '_', drug_name.upper())[:16]}"
 
         if not drug_name:
             first_token = article.title.split()[0] if article.title else "Investigational"
             drug_name = f"{first_token} Therapy"
-            drug_cui = f"CUI:AUTO:{re.sub(r'[^A-Z0-9]', '_', drug_name.upper())[:16]}"
 
-        # 2. Detect Condition (Seed Map -> PubMed MeSH -> Title Syntax -> Heuristic Fallback)
+        drug_cui = f"CUI:AUTO:{re.sub(r'[^A-Z0-9]', '_', drug_name.upper())[:16]}"
+
+        # 2. Detect Condition (PubMed MeSH -> Title Linguistic Decomposition -> Heuristic Keyword)
         cond_name = None
         cond_cui = None
 
-        # Priority A: Check KNOWN_CONDITIONS seed
-        for kw, c_name, cui in self.KNOWN_CONDITIONS:
-            if kw.lower() in full_context:
-                cond_name = c_name
-                cond_cui = cui
-                break
-
-        # Priority B: Check PubMed MeSH terms if available
-        if not cond_name and getattr(article, "mesh_terms", None):
+        # Priority A: Check PubMed MeSH terms if available
+        if getattr(article, "mesh_terms", None):
             for mt in article.mesh_terms:
                 if not any(ign in mt.lower() for ign in ["humans", "female", "male", "adult", "middle aged", "aged", "double-blind", "randomized", "placebos", "clinical trial"]):
                     cond_name = mt.title()
-                    cond_cui = f"CUI:AUTO:{re.sub(r'[^A-Z0-9]', '_', cond_name.upper())[:16]}"
                     break
 
-        # Priority C: Check title syntax "in patients with <Condition>"
-        if not cond_name:
-            pat_match = re.search(r'(?:in|for)\s+(?:patients|adults|individuals|subjects)\s+with\s+([A-Za-z0-9\s,\-]+?)(?:\s*\(|\s*:|\s*--|\s*$)', article.title, re.I)
+        # Priority B: Title Linguistic Decomposition
+        if not cond_name and article.title:
+            pat_match = re.search(r'(?:in|for)\s+(?:patients|adults|individuals|subjects)\s+with\s+(.*?)(?:\s*\([A-Z0-9\-]+\)|\s*:\s*|\s*--\s*|$)', article.title, re.I)
             if pat_match:
                 raw_cond = pat_match.group(1).strip()
-                if len(raw_cond) > 3 and len(raw_cond.split()) <= 6:
+                if len(raw_cond) > 2 and len(raw_cond.split()) <= 8:
                     cond_name = raw_cond.title()
-                    cond_cui = f"CUI:AUTO:{re.sub(r'[^A-Z0-9]', '_', cond_name.upper())[:16]}"
+
+            if not cond_name:
+                pat_in = re.search(r'\bin\s+([A-Z][a-z0-9\s,\-]+?)(?:\s*\([A-Z0-9\-]+\)|\s*:\s*|\s*--\s*|$)', article.title)
+                if pat_in:
+                    raw_cond = pat_in.group(1).strip()
+                    if len(raw_cond) > 2 and len(raw_cond.split()) <= 6:
+                        cond_name = raw_cond.title()
 
         if not cond_name:
             cond_name = "Target Clinical Indication"
-            cond_cui = "CUI:AUTO:TARGET_INDICATION"
+
+        cond_cui = f"CUI:AUTO:{re.sub(r'[^A-Z0-9]', '_', cond_name.upper())[:16]}"
 
         # 3. Detect Sentences from Section Chunks
         methods_content = ""
