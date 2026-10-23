@@ -245,13 +245,14 @@ def generate_document():
     meta_rows = [
         ["Project Name", "GraphRAG Literature Platform (Multi-Doc Chat, Biomedical NER & Structured PICO Evidence)"],
         ["Target Domain", "Pharmaceutical R&D, Clinical Development, Medical Affairs & Health Economics"],
-        ["Architecture Pattern", "Agentic Knowledge Graph Retrieval-Augmented Generation (GraphRAG) with Verification Guards"],
-        ["Key Features Covered", "Ingest to Graph, Multi-Doc Chat & Synthesis, Biomedical NER & Concept Explorer, PICO Grid, KG Explorer"],
-        ["Deployment Target", "Google Cloud Ecosystem (Google Cloud Run + Google Vertex AI / Gemini 1.5 Flash)"],
-        ["Document Status", "Production-Ready High-Level Design (HLD) & Architectural Specification"],
-        ["Classification", "Novartis AI Hackathon Technical Reference Architecture"]
+        ["Architecture Pattern", "Dynamic Agentic GraphRAG with Google Gemini 3.8 Flash & text-embedding-004 (768d)"],
+        ["Key Features Covered", "Ingest to Graph, Multi-Doc Dynamic Synthesis, Biomedical NER & Concept Explorer, PICO Grid, KG Explorer"],
+        ["Deployment Target", "Google Cloud Run (Project: graphrag-novartis, Region: us-central1, Service: graphrag-literature)"],
+        ["Live Production URL", "https://graphrag-literature-189627569441.us-central1.run.app"],
+        ["Document Status", "Production-Deployed Reference Architecture & Technical Specification (v2.2)"],
+        ["Visual Identity", "Novartis Corporate Branding (Deep Blue #002A54, Warm Amber #EC9A1E, Slate Card Surface)"]
     ]
-    add_styled_table(meta_headers, meta_rows, [Inches(2.2), Inches(4.3)])
+    add_styled_table(meta_headers, meta_rows, [Inches(2.0), Inches(4.5)])
     doc.add_page_break()
 
     # ==================== SECTION 1 ====================
@@ -313,10 +314,10 @@ def generate_document():
     add_bullet(" Section-tagged passage chunks, publication metadata (journal, publication year, study design), and normalized document manifests.", "Outputs:")
     add_bullet(" If full-text XML is paywalled or unavailable, the agent gracefully degrades to structured abstract parsing, logging the extraction confidence tier.", "Failure Recovery:")
 
-    add_h3("Agent 2: PICO & Relation Extraction Guard Agent")
-    add_bullet(" Transforming unstructured clinical narratives into strongly typed, schema-constrained PICO entities and relational edges.", "Primary Role:")
+    add_h3("Agent 2: Dynamic PICO & Relation Extraction Guard Agent")
+    add_bullet(" Transforming unstructured clinical narratives into strongly typed, schema-constrained PICO entities and relational edges using Google Gemini 3.8 Flash.", "Primary Role:")
     add_bullet(" Section-tagged text chunks, specifically focusing on Methods and Results sections.", "Inputs:")
-    add_bullet(" The agent executes schema-constrained extraction using LLMs operating under strict Pydantic JSON schemas. For every trial, it extracts study design, population demographics (condition, sample size N, age range), interventions (drug, dose, duration), comparators, and quantified clinical outcomes (hazard ratios, relative risks, 95% confidence intervals, p-values).", "Processing Logic:")
+    add_bullet(" The agent executes schema-constrained dynamic extraction using Google Gemini 3.8 Flash (via the modern google.genai SDK) operating under strict Pydantic JSON schemas. For every trial, it extracts study design, population demographics (condition, sample size N, age range), interventions (drug, dose, duration), comparators, and quantified clinical outcomes (hazard ratios, relative risks, 95% confidence intervals, p-values).", "Processing Logic:")
     add_bullet(" **The Verbatim String Guard (Hallucination Guard)**: The agent mandates an exact supporting sentence quote for every extracted parameter. An automated string-containment function verifies that the quote is an exact substring within the source text. If a quote cannot be verified, the parameter is rejected or sent back for re-extraction.", "Self-Correcting Guard:")
     add_bullet(" Validated PICO JSON records with sentence-level character offsets and verified quotation hashes.", "Outputs:")
 
@@ -327,26 +328,26 @@ def generate_document():
     add_bullet(" **Semantic Boundary Enforcement**: The agent inspects UMLS semantic types to prevent concept collisions (e.g. ensuring an acronym is not conflated between a gene symbol and a clinical syndrome).", "Guard Mechanism:")
     add_bullet(" Standardized graph nodes and hierarchical edges ('IS_A', 'IS_DRUG', 'HAS_CONDITION') loaded directly into the knowledge graph store.", "Outputs:")
 
-    add_h3("Agent 4: Hybrid Router & Pathfinding Agent")
-    add_bullet(" Analyzing incoming user queries, determining retrieval intent, and orchestrating multi-path graph and vector retrieval.", "Primary Role:")
+    add_h3("Agent 4: Hybrid Router & Pathfinding Agent (Graph + Dense text-embedding-004)")
+    add_bullet(" Analyzing incoming user queries, determining retrieval intent, and orchestrating multi-path graph and dense vector retrieval.", "Primary Role:")
     add_bullet(" Natural language user questions, session context, and optional user-selected filters.", "Inputs:")
-    add_bullet(" The agent classifies query intent across four specialized execution pathways: (1) Cross-Study Entity Queries (`graph_entity`), (2) Deterministic Aggregation Queries (`aggregation`), (3) Global Thematic Summaries (`global_thematic`), and (4) Single-Fact Lookups (`vector_fact`). For entity-centric questions, it expands user terms across the ontology graph (e.g. expanding 'SGLT2 inhibitors' to all child drug nodes), retrieves all connected trials, and then executes dense vector re-ranking only on passages belonging to those verified trials.", "Processing Logic:")
-    add_bullet(" Dual-path fallback: if a structured graph traversal returns zero nodes due to an extraction gap, the router instantly falls back to vector similarity search across all chunks, ensuring zero query dead-ends.", "Fallback Mechanism:")
+    add_bullet(" The agent classifies query intent across four specialized execution pathways: (1) Cross-Study Entity Queries (`graph_entity`), (2) Deterministic Aggregation Queries (`aggregation`), (3) Global Thematic Summaries (`global_thematic`), and (4) Single-Fact Lookups (`vector_fact`). For entity-centric questions, it expands user terms across the ontology graph (e.g. expanding 'SGLT2 inhibitors' to all child drug nodes), retrieves all connected trials, and then executes dense vector re-ranking using Google text-embedding-004 (768 dimensions) with a 1.35x multiplier on Results / Primary Endpoint sections.", "Processing Logic:")
+    add_bullet(" Dual-path fallback: if a structured graph traversal returns zero nodes due to an extraction gap, the router instantly falls back to dense cosine vector search across all chunks, ensuring zero query dead-ends.", "Fallback Mechanism:")
     add_bullet(" Filtered subgraphs, structured evidence tables, and top-k ranked textual passages.", "Outputs:")
 
-    add_h3("Agent 5: Evidence Synthesis & Audit Agent")
-    add_bullet(" Generating audit-ready clinical comparative syntheses with interactive citations and running automated entailment audits.", "Primary Role:")
+    add_h3("Agent 5: Dynamic Evidence Synthesis & Audit Agent (Gemini 3.8 Flash)")
+    add_bullet(" Generating audit-ready clinical comparative syntheses with interactive citations and running automated entailment audits powered by Gemini 3.8 Flash.", "Primary Role:")
     add_bullet(" Retrieved evidence table, top ranked passage chunks, user question, and intent classification.", "Inputs:")
-    add_bullet(" The agent synthesizes cross-trial findings, explicitly grouping results by intervention and outcome, noting study designs and sample sizes, and highlighting conflicting evidence. It generates structured markdown evidence matrices and appends interactive citation tags in the format `[PMID:sentence_id]`.", "Processing Logic:")
+    add_bullet(" Governed by the CLINICAL_GRAPHRAG_SYSTEM_PROMPT, the agent executes dynamic multi-study comparative synthesis using Gemini 3.8 Flash. It groups results by intervention and outcome, notes study designs and sample sizes, highlights conflicting evidence, generates structured markdown evidence matrices, and appends mandatory interactive citation tags in the format `[PMID:sentence_id]`.", "Processing Logic:")
     add_bullet(" **Natural Language Inference (NLI) Audit Loop**: Before returning the response to the user, an automated NLI verification pass evaluates every generated claim against its cited source sentence. If a claim is classified as 'neutral' or 'contradiction' relative to the source passage, the synthesis agent automatically rewrites or excises the claim.", "Self-Correcting Guard:")
     add_bullet(" Verified clinical synthesis response, interactive evidence table, and highlighted source quotes.", "Outputs:")
 
-    add_h3("Agent 6: Autonomous Query Optimizer & Multi-Prompt Strategy Agent")
+    add_h3("Agent 6: Dynamic Query Optimizer & Multi-Prompt Strategy Agent")
     add_bullet(" Generating optimized, high-yield query formulations for both Literature Ingestion and Multi-Document Clinical Chat.", "Primary Role:")
     add_bullet(" User clinical questions, therapeutic concepts, drug names, or rough disease keywords.", "Inputs:")
     add_bullet(" Operates in dual specialized modes:\n"
                "   • Mode A (Data Ingestion Multi-Prompt): Transforms naive keyword queries into 3-4 boolean MeSH-indexed queries incorporating active comparators, explicit publication filters ('Clinical Trial, Phase III'[pt] OR 'randomized controlled trial'[pt]), and excluding noisy review articles. Predicts expected trial yields (e.g., '20-40 Phase 3 RCTs') and generates clinical rationales.\n"
-               "   • Mode B (Clinical Chat Multi-Prompt): Inspects user questions and constructs 3 refined clinical angles: (1) Head-to-Head Comparative Efficacy, (2) Safety, Tolerability & Biomarker Deep-Dive, and (3) Guideline & Class-Level Therapeutic Landscape.", "Processing Logic:")
+               "   • Mode B (Dynamic Clinical Chat Multi-Prompt): Powered by Gemini 3.8 Flash, inspects retrieved trial characteristics and dynamically generates 3 tailored follow-up queries with explicit clinical rationales: (1) Head-to-Head Comparative Efficacy, (2) Safety, Tolerability & Biomarker Deep-Dive (e.g. acute eGFR dips vs chronic slopes), and (3) Guideline & Class-Level Therapeutic Landscape (e.g. KDIGO/ADA recommendations).", "Processing Logic:")
     add_bullet(" Guarantees zero empty retrieval results by validating generated PubMed syntax against NCBI E-Utilities constraints and ensuring all target drug entities match active ontologies.", "Verification Guard:")
     add_bullet(" Triplet of refined chat prompts with rationale badges; 3-4 optimized PubMed boolean queries with yield metrics and target drug tags.", "Outputs:")
 
@@ -536,15 +537,15 @@ def generate_document():
         ],
         [
             "Vector & Document Storage",
-            "SQLite with sqlite-vec / pgvector (Cloud SQL)",
+            "Google text-embedding-004 (768-dim) + Section-Aware Lexical Hybrid",
             "Pinecone, Weaviate, Qdrant, Chroma",
-            "Zero infrastructure lock-in. ACID compliant. Hybrid SQL relational filtering combined with vector cosine distance. Keeps metadata, quotes, and chunks unified in a single queryable store."
+            "Combines dense 768-dimensional semantic understanding with domain-specific clinical section prioritization (1.35x Results multiplier). Outperforms raw vector similarity by ensuring hard statistical trial endpoints are prioritized over exploratory background text."
         ],
         [
             "LLM & Extraction Engine",
-            "Google Vertex AI (Gemini 1.5 Flash / Pro)",
+            "Google Gemini 3.8 Flash (gemini-3.8-flash) via google.genai SDK",
             "OpenAI GPT-4o, Anthropic Claude 3.5 Sonnet, Local vLLM",
-            "Industry-leading 2M token context window allows ingesting entire clinical trial dossiers. Native constrained JSON mode. Sub-second latency on Flash with enterprise BAA/HIPAA compliance on Google Cloud."
+            "State-of-the-art sub-second latency, native JSON schema mode, and verified high medical reasoning accuracy. Configured on GCP project graphrag-novartis with automated model fallback chain and NLI entailment verification."
         ],
         [
             "Biomedical Ontology & Linker",
@@ -557,24 +558,25 @@ def generate_document():
 
     # ==================== SECTION 7 ====================
     add_h1("7. Real-Time Global Deployment on Google Cloud Ecosystem")
-    add_p("To make this platform instantly accessible to clinical and pharma teams worldwide over a secure, public HTTPS URL, the architecture leverages Google Cloud's serverless container infrastructure.")
+    add_p("To make this platform instantly accessible to clinical and pharma teams worldwide over a secure, public HTTPS URL, the architecture is deployed live on Google Cloud serverless container infrastructure in project 'graphrag-novartis' (region us-central1).")
+    add_p("Live Production Service URL: https://graphrag-literature-189627569441.us-central1.run.app")
 
     gcp_diagram = (
         "+-----------------------------------------------------------------------------------------+\n"
         "|                            GOOGLE CLOUD GLOBAL NETWORK                                  |\n"
         "|  - Google Cloud CDN (Global Edge Caching & Anycast IP)                                  |\n"
         "|  - Google Cloud Armor (DDoS Protection, WAF, Enterprise Security Policies)              |\n"
-        "|  - Managed SSL Certificate (Auto-provisioned HTTPS: https://graphrag-*.a.run.app)       |\n"
+        "|  - Managed SSL: https://graphrag-literature-189627569441.us-central1.run.app             |\n"
         "+-----------------------------------------------------------------------------------------+\n"
         "                                           |\n"
         "                                           v\n"
         "+-----------------------------------------------------------------------------------------+\n"
-        "|                       GOOGLE CLOUD RUN (SERVERLESS CONTAINER)                           |\n"
+        "|                  GOOGLE CLOUD RUN (SERVERLESS CONTAINER: graphrag-literature)            |\n"
         "|  +-----------------------------------------------------------------------------------+  |\n"
         "|  | Containerized FastAPI App (Python 3.11-slim + Uvicorn)                            |  |\n"
-        "|  |   - Serves Static Interactive UI (5 Tabs: Corpus, Chat, NER, PICO, Graph)          |  |\n"
+        "|  |   - Serves Novartis-Themed UI (Corporate Blue #002A54 & Warm Amber #EC9A1E)      |  |\n"
         "|  |   - REST API Endpoints (/api/corpus, /api/chat, /api/ner, /api/pico, /api/graph)  |  |\n"
-        "|  |   - In-Memory Knowledge Graph Engine + Landmark Clinical Benchmark Cache          |  |\n"
+        "|  |   - Hybrid text-embedding-004 (768d) Vector Store + In-Memory Knowledge Graph     |  |\n"
         "|  |   - Auto-scales from 0 to 1,000+ instances based on global concurrent requests    |  |\n"
         "|  +-----------------------------------------------------------------------------------+  |\n"
         "+-----------------------------------------------------------------------------------------+\n"
@@ -583,9 +585,9 @@ def generate_document():
         "+-----------------------------------------------------------------------------------------+\n"
         "|                         GOOGLE VERTEX AI & DATA SERVICES                                |\n"
         "|  +--------------------------+  +--------------------------+  +-----------------------+  |\n"
-        "|  | Google Vertex AI         |  | Google Secret Manager    |  | Google Cloud Storage  |  |\n"
-        "|  | Gemini 1.5 Flash API     |  | Zero-exposure API keys & |  | Bucket for XML cache &|  |\n"
-        "|  | (PICO Extraction & Chat) |  | service credentials      |  | graph JSON snapshots  |  |\n"
+        "|  | Google GenAI / Vertex AI |  | Google Secret Manager    |  | Google Cloud Storage  |  |\n"
+        "|  | Gemini 3.8 Flash API &   |  | Zero-exposure API keys & |  | Bucket for XML cache &|  |\n"
+        "|  | text-embedding-004 (768d)|  | service credentials      |  | graph JSON snapshots  |  |\n"
         "|  +--------------------------+  +--------------------------+  +-----------------------+  |\n"
         "+-----------------------------------------------------------------------------------------+"
     )
