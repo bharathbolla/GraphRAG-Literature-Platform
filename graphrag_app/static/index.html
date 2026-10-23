@@ -278,26 +278,26 @@
           </div>
         </div>
 
-        <!-- 4 Query Suggestion Chips from Slide 04 & 14 -->
+        <!-- 4 Universal Query Suggestion Chips -->
         <div class="flex flex-wrap gap-2 pt-1">
           <span class="text-xs text-[#64748B] self-center font-medium mr-1">Query Examples:</span>
-          <button onclick="fillAndSubmitChat('Which SGLT2 inhibitor trials reported kidney disease progression in CKD patients?')" class="text-xs bg-[#232A38] hover:bg-[#2B3342] text-[#C7C7C7] hover:text-white px-3 py-1.5 rounded-lg border border-[#2B3342] transition flex items-center gap-1.5">
-            <span>🔬 SGLT2i trials with kidney progression in CKD</span>
+          <button onclick="fillAndSubmitChat('Which clinical trials reported statistically significant primary endpoint risk reductions?')" class="text-xs bg-[#232A38] hover:bg-[#2B3342] text-[#C7C7C7] hover:text-white px-3 py-1.5 rounded-lg border border-[#2B3342] transition flex items-center gap-1.5">
+            <span>🔬 Trials with significant endpoint reductions</span>
           </button>
-          <button onclick="fillAndSubmitChat('Compare all-cause mortality and heart failure hospitalization hazard ratios across trials.')" class="text-xs bg-[#232A38] hover:bg-[#2B3342] text-[#C7C7C7] hover:text-white px-3 py-1.5 rounded-lg border border-[#2B3342] transition flex items-center gap-1.5">
-            <span>📊 Compare all-cause mortality across trials</span>
+          <button onclick="fillAndSubmitChat('Compare all-cause mortality and primary outcome hazard ratios across trials.')" class="text-xs bg-[#232A38] hover:bg-[#2B3342] text-[#C7C7C7] hover:text-white px-3 py-1.5 rounded-lg border border-[#2B3342] transition flex items-center gap-1.5">
+            <span>📊 Compare primary hazard ratios across trials</span>
           </button>
-          <button onclick="fillAndSubmitChat('How many phase 3 RCTs studied SGLT2 inhibitors vs placebo?')" class="text-xs bg-[#232A38] hover:bg-[#2B3342] text-[#C7C7C7] hover:text-white px-3 py-1.5 rounded-lg border border-[#2B3342] transition flex items-center gap-1.5">
-            <span>🔢 How many phase 3 RCTs tested SGLT2i vs placebo?</span>
+          <button onclick="fillAndSubmitChat('How many phase 3 RCTs are indexed in the clinical corpus?')" class="text-xs bg-[#232A38] hover:bg-[#2B3342] text-[#C7C7C7] hover:text-white px-3 py-1.5 rounded-lg border border-[#2B3342] transition flex items-center gap-1.5">
+            <span>🔢 How many phase 3 RCTs are indexed?</span>
           </button>
-          <button onclick="fillAndSubmitChat('What are the primary clinical consensus themes across the cardiorenal corpus?')" class="text-xs bg-[#232A38] hover:bg-[#2B3342] text-[#C7C7C7] hover:text-white px-3 py-1.5 rounded-lg border border-[#2B3342] transition flex items-center gap-1.5">
+          <button onclick="fillAndSubmitChat('What are the primary clinical consensus themes across the indexed corpus?')" class="text-xs bg-[#232A38] hover:bg-[#2B3342] text-[#C7C7C7] hover:text-white px-3 py-1.5 rounded-lg border border-[#2B3342] transition flex items-center gap-1.5">
             <span>🌐 Primary clinical consensus themes (Global Leiden)</span>
           </button>
         </div>
 
         <!-- Chat Input Form -->
         <div class="flex gap-2 pt-1">
-          <input type="text" id="chat-input" placeholder="Ask a cross-study clinical question (e.g. SGLT2i effect sizes in CKD)..." class="flex-1 bg-[#151922] border border-[#2B3342] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#64748B] focus:outline-none focus:border-[#EC9A1E]">
+          <input type="text" id="chat-input" placeholder="Ask a cross-study clinical question (e.g. Compare primary endpoints, hazard ratios, or trial designs)..." class="flex-1 bg-[#151922] border border-[#2B3342] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#64748B] focus:outline-none focus:border-[#EC9A1E]">
           <button onclick="sendChatMessage()" id="chat-submit-btn" class="btn-saffron font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 transition shadow-md whitespace-nowrap">
             <i class="fa-solid fa-paper-plane text-xs"></i>
             <span>Synthesize</span>

@@ -21,16 +21,16 @@ async def get_stats():
     total_enrolled = sum(art.sample_size for art in app_state.articles)
     
     # Calculate thematic communities
-    thematic_communities = max(5, int(total_articles * 1.15))
+    thematic_communities = max(1, int(total_articles * 1.15))
     
     from agents.llm_client import gemini_client
     from config import settings
 
     return ArticleStats(
         indexed_articles=total_articles,
-        section_chunks=section_chunks if section_chunks > 0 else 32,
-        kg_edges=max(total_edges, 88 if total_articles >= 7 else 34),
-        normalized_entities=max(len(entities_set), 32 if total_articles >= 7 else 18),
+        section_chunks=section_chunks,
+        kg_edges=total_edges,
+        normalized_entities=len(entities_set),
         thematic_communities=thematic_communities,
         total_enrolled_patients=total_enrolled,
         total_articles=total_articles,

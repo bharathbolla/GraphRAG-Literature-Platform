@@ -197,12 +197,16 @@ class ExtractionGuardAgent:
             first_sentences = re.split(r'(?<=[.!?])\s+', source_text)
             pop_evidence = first_sentences[0] if first_sentences else source_text[:120]
 
+        # Detect age if stated in source text
+        age_match = re.search(r'(?:mean\s+age|age\s+of)[\s,:]+([0-9\.]+)\s*(?:years|yr)?', source_text, re.I)
+        age_str = f"{age_match.group(1)} years" if age_match else None
+
         population = Population(
             description=f"Patients with {cond_name} ({article.study_design})",
             condition=cond_name,
             condition_cui=cond_cui,
             n=article.sample_size,
-            age_mean="62.4 years",
+            age_mean=age_str,
             evidence=pop_evidence
         )
 
@@ -246,17 +250,32 @@ class ExtractionGuardAgent:
             elif not out_sentence:
                 out_sentence = source_text[:150]
 
-        # Extract hazard ratio or percentage if possible
-        effect = "0.76"
-        ci_low = "0.65"
-        ci_high = "0.88"
-        p_val = "P < 0.001"
+        # Extract numerical effect size and confidence intervals dynamically
+        effect = None
+        ci_low = None
+        ci_high = None
+        p_val = None
+        measure = "Hazard Ratio (HR)"
+
         hr_match = re.search(r'hazard ratio,?\s*([0-9\.]+);\s*95%\s*(?:confidence interval|ci)\s*\[?CI\]?,?\s*([0-9\.]+)\s*to\s*([0-9\.]+)', out_sentence, re.I)
         if hr_match:
             effect = hr_match.group(1)
             ci_low = hr_match.group(2)
             ci_high = hr_match.group(3)
-        
+            measure = "Hazard Ratio (HR)"
+        else:
+            rr_match = re.search(r'(?:relative risk|odds ratio),?\s*([0-9\.]+);\s*95%\s*(?:confidence interval|ci)\s*\[?CI\]?,?\s*([0-9\.]+)\s*to\s*([0-9\.]+)', out_sentence, re.I)
+            if rr_match:
+                effect = rr_match.group(1)
+                ci_low = rr_match.group(2)
+                ci_high = rr_match.group(3)
+                measure = "RR / OR"
+            else:
+                pct_match = re.search(r'([0-9\.]+)\s*%', out_sentence)
+                if pct_match:
+                    effect = f"{pct_match.group(1)}%"
+                    measure = "Relative Reduction (%)"
+
         p_match = re.search(r'([Pp]\s*[<=]\s*[0-9\.]+)', out_sentence)
         if p_match:
             p_val = p_match.group(1)
@@ -266,12 +285,12 @@ class ExtractionGuardAgent:
             name=f"Primary Efficacy Endpoint in {cond_name}",
             outcome_cui=f"CUI:AUTO:{outcome_slug}_ENDPOINT",
             timepoint="Trial endpoint",
-            effect=effect,
-            measure="Hazard Ratio (HR)",
-            ci_low=ci_low,
-            ci_high=ci_high,
-            p_value=p_val,
-            direction="Significant Benefit",
+            effect=effect or "Not reported",
+            measure=measure,
+            ci_low=ci_low or "N/A",
+            ci_high=ci_high or "N/A",
+            p_value=p_val or "Not stated",
+            direction="Significant Benefit" if (p_val and ("<" in p_val or "=0.0" in p_val)) else "Evaluated",
             evidence=out_sentence
         )
 

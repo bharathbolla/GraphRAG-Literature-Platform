@@ -104,13 +104,13 @@ class IngestionAgent:
                         if not section_chunks:
                             section_chunks = [SectionChunk(section_name="FULL_ABSTRACT", content=full_abstract)]
 
-                        sample_size = 1200
+                        sample_size = 0
                         n_match = re.search(r'\b(?:enrolled|assigned|randomized|included|total of)\s+([0-9,]{2,7})\s+(?:patients|participants|subjects|individuals)', full_abstract, re.I)
                         if n_match:
                             try:
                                 sample_size = int(n_match.group(1).replace(",", ""))
                             except Exception:
-                                sample_size = 1200
+                                sample_size = 0
 
                         # Extract MeSH Descriptors & Chemical substances from PubMed XML
                         mesh_terms = []
