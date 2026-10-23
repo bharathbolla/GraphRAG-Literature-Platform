@@ -387,7 +387,7 @@ function dismissIngestBanner() {
 }
 
 async function resetBenchmark() {
-  if (!confirm("Reset corpus to the 7 landmark Phase 3 SGLT2i clinical trials?")) return;
+  if (!confirm("Reset corpus to the 7 landmark Phase 3 clinical trials benchmark?")) return;
   try {
     const res = await fetch('/api/benchmark/reset', { method: 'POST' });
     const data = await res.json();
@@ -749,7 +749,8 @@ async function selectNEREntity(entityName) {
 
 // ==================== TAB 4: STRUCTURED PICO GRID ====================
 async function loadPicoTable() {
-  const drugFilter = document.getElementById('pico-drug-filter')?.value || '';
+  const select = document.getElementById('pico-drug-filter');
+  const drugFilter = select?.value || '';
   try {
     const url = drugFilter ? `/api/pico?drug=${encodeURIComponent(drugFilter)}` : '/api/pico';
     const res = await fetch(url);
@@ -757,6 +758,24 @@ async function loadPicoTable() {
     const tbody = document.getElementById('pico-table-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
+
+    // Dynamically update drug filter options if currently empty or has only default
+    if (select && select.options.length <= 1) {
+      const drugSet = new Set();
+      data.pico_rows.forEach(r => {
+        if (r.intervention && r.intervention !== 'N/A') {
+          const cleanDrug = r.intervention.split('(')[0].trim();
+          if (cleanDrug) drugSet.add(cleanDrug);
+        }
+      });
+      const sortedDrugs = Array.from(drugSet).sort();
+      sortedDrugs.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        select.appendChild(opt);
+      });
+    }
 
     data.pico_rows.forEach(r => {
       const tr = document.createElement('tr');

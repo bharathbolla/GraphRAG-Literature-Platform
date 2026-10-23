@@ -90,7 +90,7 @@
         </button>
         <button onclick="resetBenchmark()" class="bg-[#242A38] hover:bg-[#2E3646] border border-[#3A4559] text-[#E2E6EC] hover:text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
           <i class="fa-solid fa-rotate-right text-xs"></i>
-          <span>Reset SGLT2i Corpus</span>
+          <span>Reset Benchmark Corpus</span>
         </button>
       </div>
     </div>
@@ -507,11 +507,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-3">
           <select id="pico-drug-filter" onchange="loadPicoTable()" class="bg-[#151922] border border-[#2B3342] text-xs text-[#E2E6EC] rounded-xl px-3 py-2 focus:outline-none">
-            <option value="">All SGLT2i Drugs</option>
-            <option value="Empagliflozin">Empagliflozin</option>
-            <option value="Dapagliflozin">Dapagliflozin</option>
-            <option value="Canagliflozin">Canagliflozin</option>
-            <option value="Ertugliflozin">Ertugliflozin</option>
+            <option value="">All Investigational Drugs</option>
           </select>
           <a href="/api/export/pico.csv" download class="btn-saffron text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition shadow-md">
             <i class="fa-solid fa-file-csv"></i>

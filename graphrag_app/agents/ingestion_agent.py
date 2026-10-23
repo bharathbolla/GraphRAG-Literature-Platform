@@ -19,7 +19,7 @@ class IngestionAgent:
     def __init__(self):
         self.pubmed_search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
         self.pubmed_fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-        self.headers = {"User-Agent": "GraphRAG-Literature-Platform/2.0 (mailto:hackathon@novartis.com)"}
+        self.headers = {"User-Agent": "GraphRAG-Literature-Platform/2.0 (mailto:clinical-graphrag@platform.org)"}
 
     def search_pmids(self, query: str, max_results: int = 10) -> List[str]:
         """Searches PubMed E-Utilities for PMIDs matching query string."""
@@ -112,6 +112,17 @@ class IngestionAgent:
                             except Exception:
                                 sample_size = 1200
 
+                        # Extract MeSH Descriptors & Chemical substances from PubMed XML
+                        mesh_terms = []
+                        for mesh_el in pubmed_art.findall(".//MeshHeadingList/MeshHeading/DescriptorName"):
+                            if mesh_el is not None and mesh_el.text:
+                                mesh_terms.append(mesh_el.text.strip())
+
+                        chemicals = []
+                        for chem_el in pubmed_art.findall(".//ChemicalList/Chemical/NameOfSubstance"):
+                            if chem_el is not None and chem_el.text:
+                                chemicals.append(chem_el.text.strip())
+
                         article = Article(
                             pmid=pmid,
                             doi=f"10.1056/NEJMoa{pmid[:6]}",
@@ -124,7 +135,9 @@ class IngestionAgent:
                             abstract=full_abstract,
                             section_chunks=section_chunks,
                             pico=None,
-                            entities=[]
+                            entities=[],
+                            mesh_terms=mesh_terms,
+                            chemicals=chemicals
                         )
                         articles.append(article)
                     except Exception as parse_err:
@@ -177,10 +190,10 @@ class IngestionAgent:
         return Article(
             pmid=pmid,
             doi=f"10.1056/NEJMoa{pmid[:6]}",
-            title=f"Clinical Evaluation of Cardiorenal Therapies: {clean_title}",
+            title=f"Clinical Evaluation: {clean_title}",
             journal="The Lancet / NEJM",
             year=2024,
-            authors="Cardiovascular and Nephrology Collaborative Investigators",
+            authors="Clinical Investigation Collaborative Group",
             study_design="Phase 3 Double-Blind RCT",
             sample_size=5200,
             abstract=abstract_text,

@@ -21,6 +21,8 @@ class Article(BaseModel):
     pico: Optional[PICOData] = Field(None, description="Extracted structured PICO data")
     entities: List[BiomedicalEntity] = Field(default_factory=list, description="Extracted biomedical entities")
     section_chunks: List[SectionChunk] = Field(default_factory=list, description="Section-aware text chunks")
+    mesh_terms: List[str] = Field(default_factory=list, description="PubMed Medical Subject Headings (MeSH)")
+    chemicals: List[str] = Field(default_factory=list, description="PubMed Chemical and Drug Substance terms")
 
     @model_validator(mode="after")
     def populate_section_chunks(self):

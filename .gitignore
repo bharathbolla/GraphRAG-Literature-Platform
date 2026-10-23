@@ -25,3 +25,6 @@ Thumbs.db
 # AWS design documents (tracked on aws-sandbox-pilot-design branch, ignored on main)
 GraphRAG_Literature_Platform_AWS_Architecture_and_Sandbox_HLD.docx
 generate_aws_architecture_document.py
+
+# Local runtime data
+data/

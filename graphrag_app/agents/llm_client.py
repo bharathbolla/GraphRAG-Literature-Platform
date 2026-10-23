@@ -146,7 +146,7 @@ INSTRUCTIONS FOR SYNTHESIS:
         studies_context = "; ".join(studies)
 
         prompt = f"""
-You are the Clinical Prompt Strategy Refiner for Novartis Medical Affairs.
+You are the Clinical Prompt Strategy Refiner for systematic biomedical literature reviews.
 Given the user query: "{query}"
 And the retrieved clinical studies: {studies_context}
 

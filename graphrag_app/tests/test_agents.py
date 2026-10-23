@@ -141,3 +141,80 @@ def test_hybrid_vector_store():
     vs.add_chunk("c4", "30990260", "Results", "Canagliflozin reduced ESRD", embedding=mock_emb2)
     assert vs.has_dense_embeddings() is True
 
+def test_open_domain_generalizability():
+    """Verifies that the entire pipeline generalizes to arbitrary non-cardiorenal drugs and conditions."""
+    from models.article import Article, SectionChunk
+    from models.entity import EntityType
+
+    # 1. Unseen Oncology Article (Pembrolizumab in Advanced Melanoma)
+    novel_art = Article(
+        pmid="25891178",
+        title="Pembrolizumab versus Ipilimumab in Patients with Advanced Melanoma",
+        journal="N Engl J Med",
+        year=2015,
+        authors="Robert C, Schachter J, Long GV, et al.",
+        study_design="Phase 3 Randomized Controlled Trial",
+        sample_size=834,
+        abstract=(
+            "BACKGROUND: The immune checkpoint inhibitor pembrolizumab has shown antitumor activity in advanced melanoma.\n"
+            "METHODS: We conducted a randomized, controlled, phase 3 study comparing pembrolizumab with ipilimumab in 834 patients.\n"
+            "RESULTS: Progression-free survival was significantly longer with pembrolizumab than with ipilimumab "
+            "(hazard ratio, 0.58; 95% confidence interval [CI], 0.46 to 0.72; P<0.001).\n"
+            "CONCLUSIONS: Pembrolizumab prolonged progression-free survival."
+        ),
+        section_chunks=[
+            SectionChunk(section_name="BACKGROUND", content="The immune checkpoint inhibitor pembrolizumab has shown antitumor activity in advanced melanoma."),
+            SectionChunk(section_name="METHODS", content="We conducted a randomized, controlled, phase 3 study comparing pembrolizumab with ipilimumab in 834 patients."),
+            SectionChunk(section_name="RESULTS", content="Progression-free survival was significantly longer with pembrolizumab than with ipilimumab (hazard ratio, 0.58; 95% confidence interval [CI], 0.46 to 0.72; P<0.001)."),
+            SectionChunk(section_name="CONCLUSIONS", content="Pembrolizumab prolonged progression-free survival.")
+        ]
+    )
+
+    # 2. Test ExtractionGuardAgent Generalizability
+    extractor = ExtractionGuardAgent()
+    pico = extractor.extract_and_verify(novel_art)
+    novel_art.pico = pico
+
+    assert pico is not None
+    assert "Melanoma" in pico.population.condition
+    assert "CKD" not in pico.population.condition
+    assert "Pembrolizumab" in pico.interventions[0].name
+    assert "Empagliflozin" not in pico.interventions[0].name
+    assert pico.outcomes[0].effect == "0.58"
+    assert pico.outcomes[0].ci_low == "0.46"
+    assert pico.outcomes[0].ci_high == "0.72"
+
+    # 3. Test OntologyAgent Generalizability on Novel Entity
+    ont_agent = OntologyAgent()
+    novel_entities = ont_agent.normalize_article_entities(novel_art)
+    novel_art.entities = novel_entities
+    
+    assert len(novel_entities) >= 2
+    ent_names = [e.name for e in novel_entities]
+    assert any("Melanoma" in n for n in ent_names)
+    assert any("Pembrolizumab" in n for n in ent_names)
+
+    # Test open-domain normalization on completely arbitrary compound
+    novel_comp = ont_agent.normalize_term("tirzepatide")
+    assert novel_comp is not None
+    assert novel_comp.type == EntityType.DRUG
+    assert novel_comp.cui is not None
+
+    # 4. Test KnowledgeGraphManager Dynamic Class Building (No SGLT2i for Pembrolizumab)
+    kg = KnowledgeGraphManager()
+    kg.rebuild_from_articles([novel_art])
+    
+    # Verify Pembrolizumab is NOT linked to SGLT2i
+    edges = list(kg.graph.edges(data=True))
+    assert not any(u == "drug_C3886580" and v == "class_sglt2i" for u, v, d in edges)
+    # Verify Pembrolizumab is linked to an immune checkpoint or oncology class
+    drug_classes = [v for u, v, d in edges if "drug_" in u and d.get("relationship") == "IS_A"]
+    assert len(drug_classes) >= 1
+    assert "class_sglt2i" not in drug_classes
+
+    # 5. Test RouterAgent Dynamic Matching on Oncology Query
+    vs = VectorStore()
+    router = RouterAgent(kg, vs)
+    intent, matched_pmids, _ = router.route_and_retrieve("Which trials evaluated progression-free survival in melanoma?", [novel_art])
+    assert "25891178" in matched_pmids
+

@@ -15,21 +15,71 @@ class KnowledgeGraphManager:
     def clear(self):
         self.graph.clear()
         
+    DRUG_CLASS_MAP = {
+        # SGLT2i
+        "empagliflozin": ("class_sglt2i", "SGLT2 inhibitors", "C3890289"),
+        "dapagliflozin": ("class_sglt2i", "SGLT2 inhibitors", "C3890289"),
+        "canagliflozin": ("class_sglt2i", "SGLT2 inhibitors", "C3890289"),
+        "ertugliflozin": ("class_sglt2i", "SGLT2 inhibitors", "C3890289"),
+        # ARNI / ACEi / MRAs
+        "sacubitril": ("class_arni", "Angiotensin Receptor-Neprilysin Inhibitors (ARNI)", "C3890290"),
+        "valsartan": ("class_arni", "Angiotensin Receptor-Neprilysin Inhibitors (ARNI)", "C3890290"),
+        "enalapril": ("class_acei", "ACE Inhibitors", "C0003015"),
+        "finerenone": ("class_mra", "Non-Steroidal Mineralocorticoid Receptor Antagonists", "C4082260"),
+        # CDK4/6 Inhibitors
+        "ribociclib": ("class_cdk46", "CDK4/6 Inhibitors", "C4052345"),
+        "palbociclib": ("class_cdk46", "CDK4/6 Inhibitors", "C2987625"),
+        "abemaciclib": ("class_cdk46", "CDK4/6 Inhibitors", "C4082269"),
+        # Immune Checkpoint Inhibitors
+        "pembrolizumab": ("class_ici", "PD-1 / PD-L1 Immune Checkpoint Inhibitors", "C3886580"),
+        "nivolumab": ("class_ici", "PD-1 / PD-L1 Immune Checkpoint Inhibitors", "C3886580"),
+        # Biologics & Monoclonal Antibodies
+        "secukinumab": ("class_il17", "Interleukin-17A Inhibitors", "C3273840"),
+        "ixekizumab": ("class_il17", "Interleukin-17A Inhibitors", "C3539828"),
+        "guselkumab": ("class_il23", "Interleukin-23 Inhibitors", "C4085441"),
+        "ofatumumab": ("class_cd20", "Anti-CD20 Monoclonal Antibodies", "C2719580"),
+        "ocrelizumab": ("class_cd20", "Anti-CD20 Monoclonal Antibodies", "C1709426"),
+        # Targeted Hematology
+        "asciminib": ("class_stamp", "STAMP BCR-ABL1 Inhibitors", "C5205796"),
+        "iptacopan": ("class_cfb", "Complement Factor B Inhibitors", "C5441712"),
+        # Incretins / GLP-1
+        "semaglutide": ("class_glp1", "GLP-1 Receptor Agonists", "C4085420"),
+        "tirzepatide": ("class_glp1_gip", "Dual GIP / GLP-1 Receptor Agonists", "C5544711"),
+        "lecanemab": ("class_amyloid", "Anti-Amyloid Beta Monoclonal Antibodies", "C5544719"),
+    }
+
+    def infer_drug_class(self, drug_name: str) -> tuple:
+        """Dynamically resolves the therapeutic class for any drug using registry or USAN stems."""
+        d_lower = drug_name.lower().strip()
+        for k, v in self.DRUG_CLASS_MAP.items():
+            if k in d_lower:
+                return v
+
+        if d_lower.endswith("mab"):
+            return ("class_mab", "Monoclonal Antibodies", "C0003241")
+        elif d_lower.endswith("nib"):
+            return ("class_tki", "Targeted Kinase Inhibitors", "C1517728")
+        elif d_lower.endswith("gliflozin"):
+            return ("class_sglt2i", "SGLT2 inhibitors", "C3890289")
+        elif d_lower.endswith("sartan"):
+            return ("class_arb", "Angiotensin Receptor Blockers", "C0003016")
+        elif d_lower.endswith("statin"):
+            return ("class_statin", "HMG-CoA Reductase Inhibitors", "C0019614")
+        elif d_lower.endswith("tide"):
+            return ("class_peptide", "Peptide Therapeutic Agonists", "C0030880")
+        elif d_lower.endswith("ciclib"):
+            return ("class_cdk", "Cyclin-Dependent Kinase Inhibitors", "C4052345")
+
+        clean_slug = "".join(c if c.isalnum() else "_" for c in drug_name).upper()[:14]
+        return (f"class_{clean_slug}", f"Targeted Therapy: {drug_name}", None)
+
     def rebuild_from_articles(self, articles: List[Article]):
-        """Reconstructs the full biomedical knowledge graph from the given article list."""
+        """Reconstructs the full biomedical knowledge graph dynamically from the given article list."""
         self.clear()
         
-        # Base Drug Class Node
-        sglt2_class_id = "class_sglt2i"
-        self.graph.add_node(
-            sglt2_class_id,
-            label="SGLT2 inhibitors",
-            type="DrugClass",
-            cui="C3890289",
-            color="#EC9A1E",
-            title="Pharmacologic Class: Sodium-Glucose Co-Transporter 2 Inhibitors"
-        )
-        
+        # Track registered class nodes to avoid duplicate creation
+        registered_classes = set()
+
         for art in articles:
             pmid = art.pmid
             art_id = f"art_{pmid}"
@@ -53,6 +103,7 @@ class KnowledgeGraphManager:
                 continue
                 
             # 2. Population & Condition Nodes
+            cond_id = None
             pop = pico.population
             if pop:
                 pop_id = f"pop_{pmid}"
@@ -66,7 +117,7 @@ class KnowledgeGraphManager:
                 )
                 self.graph.add_edge(art_id, pop_id, relationship="ENROLLS")
                 
-                cond_cui = pop.condition_cui or "C0022661"
+                cond_cui = pop.condition_cui or f"CUI:AUTO:{pop.condition[:12].upper()}"
                 cond_id = f"cond_{cond_cui}"
                 self.graph.add_node(
                     cond_id,
@@ -78,7 +129,7 @@ class KnowledgeGraphManager:
                 )
                 self.graph.add_edge(pop_id, cond_id, relationship="HAS_CONDITION")
                 
-            # 3. Interventions & Drug Nodes
+            # 3. Interventions & Drug Nodes & Dynamic Drug Class
             for inter in pico.interventions:
                 drug_cui = inter.drug_cui or inter.name.lower().replace(" ", "_")
                 drug_id = f"drug_{drug_cui}"
@@ -92,7 +143,24 @@ class KnowledgeGraphManager:
                     title=f"Therapeutic Agent: {inter.name} (RxNorm: {inter.rxnorm or 'N/A'})"
                 )
                 self.graph.add_edge(art_id, drug_id, relationship="STUDIES", dose=inter.dose)
-                self.graph.add_edge(drug_id, sglt2_class_id, relationship="IS_A")
+                
+                # Dynamic Class Node
+                class_id, class_label, class_cui = self.infer_drug_class(inter.name)
+                if class_id not in registered_classes:
+                    self.graph.add_node(
+                        class_id,
+                        label=class_label,
+                        type="DrugClass",
+                        cui=class_cui or "C0000000",
+                        color="#EC9A1E",
+                        title=f"Pharmacologic Class: {class_label}"
+                    )
+                    registered_classes.add(class_id)
+                self.graph.add_edge(drug_id, class_id, relationship="IS_A")
+
+                # Connect Drug to Condition if present
+                if cond_id:
+                    self.graph.add_edge(drug_id, cond_id, relationship="TREATS")
                 
             # 4. Clinical Outcomes
             for out in pico.outcomes:

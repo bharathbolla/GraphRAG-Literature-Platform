@@ -37,7 +37,7 @@ async def get_stats():
         total_nodes=total_nodes,
         total_edges=total_edges,
         unique_entities=len(entities_set),
-        benchmark_name="SGLT2 Inhibitors in Cardiorenal Disease (7 Landmark Phase 3 RCTs)",
+        benchmark_name="Multicenter Landmark Phase 3 Clinical Trials Benchmark",
         llm_model=settings.GEMINI_MODEL,
         llm_active=gemini_client.is_available(),
         embedding_model=settings.EMBEDDING_MODEL,
